@@ -1,0 +1,12 @@
+To compile uclibc for KLEE:
+
+./configure --with-llvm=<llvm-root-dir>
+make
+
+You can also add optional flags by running adding KLEE_CFLAGS=... to
+the end of the make line above. In particular, to compile printf,
+which is excluded by default, use:
+
+make KLEE_CFLAGS="-DKLEE_SYM_PRINTF"
+
+To compile in optimized mode, add "DODEBUG=n"

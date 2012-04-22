@@ -62,6 +62,15 @@
 #define __LC_MESSAGES		5
 #define __LC_ALL			6
 
+/* DWD - added */
+#define __LC_PAPER               7
+#define __LC_NAME  8
+#define __LC_ADDRESS  9
+#define __LC_TELEPHONE  10
+#define __LC_MEASUREMENT  11
+#define __LC_IDENTIFICATION  12
+/* DWD - end */
+
 /**********************************************************************/
 #ifndef __LOCALE_C_ONLY
 
