@@ -36,10 +36,18 @@ include $(top_srcdir)extra/locale/Makefile.in
 # last included to catch all the objects added by others (locales/threads)
 include $(top_srcdir)libc/Makefile.in
 
-include/bits/uClibc_config.h: extra/config/conf .config
+
+# DWD - removed and replaced with chunk below
+#include/bits/uClibc_config.h: extra/config/conf .config
+#	$(Q)$(INSTALL) -d $(dir $@)
+#	$(Q)@$< -o $(top_srcdir)extra/Configs/Config.in
+#	$(top_srcdir)extra/scripts/conf-header.sh .config > include/bits/uClibc_config.h
+
+# DWD - replaced above chunk
+include/bits/uClibc_config.h: .config
 	$(Q)$(INSTALL) -d $(dir $@)
-	$(Q)@$< -o $(top_srcdir)extra/Configs/Config.in
 	$(top_srcdir)extra/scripts/conf-header.sh .config > include/bits/uClibc_config.h
+
 
 
 # For the moment, we have to keep re-running this target
@@ -209,6 +217,9 @@ endif
 	    chmod 755 $$i; chmod 644 $$i/*.h > /dev/null 2>&1; \
 	done
 	-chown -R `id | sed 's/^uid=\([0-9]*\).*gid=\([0-9]*\).*$$/\1:\2/'` $(PREFIX)$(DEVEL_PREFIX)include
+	# DWD - added following line:
+	cp include/kernel_types.h include/bits/kernel_types.h:q
+
 
 # Installs development library links.
 install_dev: install_headers
@@ -296,6 +307,8 @@ endif # ifeq ($(HAVE_DOT_CONFIG),y)
 
 include/bits:
 	$(INSTALL) -d include/bits
+	# DWD - added following line:
+	cp include/kernel_types.h include/bits/kernel_types.h
 
 # configuration
 # ---------------------------------------------------------------------------

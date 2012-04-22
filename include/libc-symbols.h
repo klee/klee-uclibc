@@ -525,6 +525,7 @@
 #undef hidden_data_ver
 #define hidden_data_ver(local, name) /* strong_alias(local,__GI_##name) */
 
+/* DGU DWD
 #if !defined NOT_IN_libc
 # define libc_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
 # define libc_hidden_def(name) hidden_def (name)
@@ -534,6 +535,7 @@
 # define libc_hidden_data_weak(name) hidden_data_weak (name)
 # define libc_hidden_data_ver(local, name) hidden_data_ver (local, name)
 #else
+*/
 # define libc_hidden_proto(name, attrs...)
 # define libc_hidden_def(name)
 # define libc_hidden_weak(name)
@@ -541,7 +543,7 @@
 # define libc_hidden_data_def(name)
 # define libc_hidden_data_weak(name)
 # define libc_hidden_data_ver(local, name)
-#endif
+/* DGU DWD #endif */
 
 #if defined NOT_IN_libc && defined IS_IN_rtld
 # define rtld_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)

@@ -33,7 +33,9 @@ enum
   __LC_MONETARY = 4,
   __LC_MESSAGES = 5,
   __LC_ALL = 6,
-#if 0
+/* DWD */
+//#if 0
+#if 1
   __LC_PAPER = 7,
   __LC_NAME = 8,
   __LC_ADDRESS = 9,
