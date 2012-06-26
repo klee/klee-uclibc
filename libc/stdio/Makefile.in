@@ -82,7 +82,8 @@ CSRC += wscanf.c swscanf.c fwscanf.c vwscanf.c vswscanf.c vfwscanf.c
 endif
 
 # unimplemented functions
-CSRC += overflow.c
+CSRC += overflow.c underflow.c
+
 CUSRC_UNLOCKED := $(patsubst %.c,%_unlocked.c,$(CUSRC))
 
 CSRC += $(CUSRC) $(CUSRC_UNLOCKED)
