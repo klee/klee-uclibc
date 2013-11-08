@@ -21,3 +21,6 @@ include/sys/user.h
 
 # Build libraries
 lib/
+
+#Configure files
+Rules.mak
