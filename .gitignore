@@ -1,0 +1,23 @@
+# built object files
+*.os
+
+# symlinks
+include/bits/*
+include/dl-osinfo.h
+include/fpu_control.h
+include/hp-timing.h
+include/sys/acct.h
+include/sys/debugreg.h
+include/sys/epoll.h
+include/sys/inotify.h
+include/sys/io.h
+include/sys/perm.h
+include/sys/prctl.h
+include/sys/procfs.h
+include/sys/ptrace.h
+include/sys/reg.h
+include/sys/ucontext.h
+include/sys/user.h
+
+# Build libraries
+lib/
