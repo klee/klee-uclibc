@@ -34,9 +34,10 @@ endif
 
 include $(LLVMROOTDIR)//Makefile.config
 LLVMTOOLDIR = $(LLVMROOTDIR)/Release+Asserts/bin
+LLVMGCC = clang
 
 DODEBUG=y
-CC         = $(LLVMGCC) --emit-llvm $(KLEE_CFLAGS)
+CC         = $(LLVMGCC) -emit-llvm $(KLEE_CFLAGS)
 AR         = $(LLVMTOOLDIR)/llvm-ar
 LD         = $(LLVMTOOLDIR)/llvm-ld
 NM         = $(LLVMTOOLDIR)/llvm-nm
