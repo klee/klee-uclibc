@@ -38,7 +38,7 @@ LLVMGCC = clang
 
 DODEBUG=y
 CC         = $(LLVMGCC) -emit-llvm $(KLEE_CFLAGS)
-AR         = $(LLVMTOOLDIR)/llvm-ar
+AR         = $(LLVMTOOLDIR)/llvm-link
 LD         = $(LLVMTOOLDIR)/llvm-ld
 NM         = $(LLVMTOOLDIR)/llvm-nm
 STRIPTOOL  = true
@@ -138,7 +138,7 @@ check_ld=$(shell \
 	if $(LD) $(1) -o /dev/null -b binary /dev/null > /dev/null 2>&1; \
 	then echo "$(1)"; fi)
 
-ARFLAGS:=cr
+ARFLAGS:=-o
 
 OPTIMIZATION:=
 # Use '-Os' optimization if available, else use -O2, allow Config to override
