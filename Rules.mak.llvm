@@ -33,7 +33,7 @@ CROSS=
 endif
 
 include $(LLVMROOTDIR)//Makefile.config
-LLVMTOOLDIR = $(LLVMROOTDIR)/Release+Asserts/bin
+LLVMTOOLDIR = $(shell llvm-config --bindir)/
 LLVMGCC = clang
 
 DODEBUG=y
