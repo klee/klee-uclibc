@@ -45,6 +45,8 @@ def main(args):
     parser.add_argument('--with-llvm-config', help='Path to llvm-config executable to use. If not set then llvm-config in the PATH environment will be used.', type=str)
 
     parser.add_argument('--with-cc', help='Force C compiler to be used. If this and CC environment variable is not set then auto-detection will be detected.', type=str)
+    parser.add_argument('--enable-assertions', default=False, action='store_true', help='Enable assertions. (Default %(default)s)')
+    parser.add_argument('--enable-debug', default=False, action='store_true', help='Enable debug symbols and disable optimisations. (Default %(default)s)')
 
     parser.add_argument('--log-level',type=str, default='info',choices=['debug','info','warning','error','critical'])
 
@@ -117,6 +119,21 @@ def runTool(cmd):
     logging.debug('Execution completed with output:"{}"'.format(output))
     return (retCode, output)
 
+def handleCommonOptions(pargs, subs):
+    if pargs.enable_assertions:
+        subs['ASSERTS'] = 'y'
+        logging.info('Enabling assertions')
+    else:
+        logging.info('Disabling assertions')
+        subs['ASSERTS'] = 'n'
+
+    if pargs.enable_debug:
+        subs['DEBUG'] = 'y'
+        logging.info('Configuring for debug build')
+    else:
+        logging.info('Configuring for Release build')
+        subs['DEBUG'] = 'n'
+
 
 def handleNativeConfig(pargs, cc=None):
     logging.info('Configuring for native archive')
@@ -124,6 +141,8 @@ def handleNativeConfig(pargs, cc=None):
     subs = { 'EMIT_LLVM':'', # Building natively so we don't want LLVM Bitcode
              'TOOLDIR':'' # Native compiler tools should be in PATH
            } 
+    handleCommonOptions(pargs, subs)
+
 
     def searchPath(cc, lookFor):
         if not cc:
@@ -177,6 +196,7 @@ def handleNativeConfig(pargs, cc=None):
 def handleLLVMConfig(pargs, cc=None):
     # Substitutions
     subs = { 'EMIT_LLVM':'-emit-llvm'}
+    handleCommonOptions(pargs, subs)
 
     logging.info('Configuring for LLVM bitcode archive')
 

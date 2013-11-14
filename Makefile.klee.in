@@ -17,5 +17,8 @@ OBJDUMP = $(TOOLDIR)@OBJDUMP@
 # We don't want to strip any debug symbols
 STRIPTOOL  = true
 
+DODEBUG = @DEBUG@
+DOASSERTS = @ASSERTS@
+
 HOSTCC     = @CC@
 BUILD_CFLAGS = -O2 -Wall @EMIT_LLVM@
