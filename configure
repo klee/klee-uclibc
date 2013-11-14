@@ -46,7 +46,7 @@ def main(args):
 
     parser.add_argument('--with-cc', help='Force C compiler to be used. If this and CC environment variable is not set then auto-detection will be detected.', type=str)
     parser.add_argument('--enable-assertions', default=False, action='store_true', help='Enable assertions. (Default %(default)s)')
-    parser.add_argument('--enable-debug', default=False, action='store_true', help='Enable debug symbols and disable optimisations. (Default %(default)s)')
+    parser.add_argument('--enable-release', default=False, action='store_true', help='Enable Release mode. (Default %(default)s)')
 
     parser.add_argument('--log-level',type=str, default='info',choices=['debug','info','warning','error','critical'])
 
@@ -127,12 +127,12 @@ def handleCommonOptions(pargs, subs):
         logging.info('Disabling assertions')
         subs['ASSERTS'] = 'n'
 
-    if pargs.enable_debug:
-        subs['DEBUG'] = 'y'
-        logging.info('Configuring for debug build')
-    else:
+    if pargs.enable_release:
         logging.info('Configuring for Release build')
         subs['DEBUG'] = 'n'
+    else:
+        logging.info('Configuring for Debug build')
+        subs['DEBUG'] = 'y'
 
 
 def handleNativeConfig(pargs, cc=None):
