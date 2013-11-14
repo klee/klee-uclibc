@@ -23,4 +23,4 @@ include/sys/user.h
 lib/
 
 #Configure files
-Rules.mak
+Makefile.klee
