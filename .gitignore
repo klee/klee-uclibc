@@ -36,3 +36,4 @@ extra/config/lxdialog/util.o
 extra/config/lxdialog/yesno.o
 extra/config/mconf.o
 extra/config/zconf.tab.o
+extra/config/mconf
