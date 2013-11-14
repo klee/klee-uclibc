@@ -24,3 +24,15 @@ lib/
 
 #Configure files
 Makefile.klee
+
+# make menuconfig files
+extra/config/conf.o
+extra/config/kxgettext.o
+extra/config/lxdialog/checklist.o
+extra/config/lxdialog/inputbox.o
+extra/config/lxdialog/menubox.o
+extra/config/lxdialog/textbox.o
+extra/config/lxdialog/util.o
+extra/config/lxdialog/yesno.o
+extra/config/mconf.o
+extra/config/zconf.tab.o
