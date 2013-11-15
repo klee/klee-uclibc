@@ -1,0 +1,5 @@
+These directories contain config files and any patches that
+are needed for particular architectures.
+
+The config files can be generated manually using `make menuconfig`. These
+config files are simply provided to make building klee-uclibc simpler.

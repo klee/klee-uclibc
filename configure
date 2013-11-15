@@ -27,6 +27,8 @@ import sys
 import logging
 import subprocess
 import pprint
+import platform
+import shutil
 
 uclibcRoot=os.path.dirname( os.path.abspath(__file__) )
 templateTarget= os.path.join( uclibcRoot, 'Makefile.klee')
@@ -47,6 +49,10 @@ def main(args):
     parser.add_argument('--with-cc', help='Force C compiler to be used. If this and CC environment variable is not set then auto-detection will be detected.', type=str)
     parser.add_argument('--enable-assertions', default=False, action='store_true', help='Enable assertions. (Default %(default)s)')
     parser.add_argument('--enable-release', default=False, action='store_true', help='Enable Release mode. (Default %(default)s)')
+
+    parser.add_argument('--disable-prebuilt-config', default=False, action='store_true',
+                        help='Do not use pre-built config (+ any needed patches) to emulate legacy klee-uclibc. If you want to generate your own config use this option then run `make menuconfig`. (Default %(default)s)')
+
 
     parser.add_argument('--log-level',type=str, default='info',choices=['debug','info','warning','error','critical'])
 
@@ -85,6 +91,46 @@ def main(args):
         handleNativeConfig(pargs, cc)
     else:
         handleLLVMConfig(pargs, cc)
+
+    uclibcConfigFile = os.path.join(uclibcRoot, '.config')
+
+    if pargs.disable_prebuilt_config:
+        logging.info('Not using pre-built config. You should run `make menuconfig` or `make config`')
+        if os.path.exists(uclibcConfigFile):
+            logging.warning('A pre-existing .config file was detected. You should probably remove it.')
+    else:
+        if os.path.exists(uclibcConfigFile):
+            logging.warning('Removing existing config file...{}'.format(uclibcConfigFile))
+            os.remove(uclibcConfigFile)
+        installPrebuiltConfig()
+
+
+def installPrebuiltConfig():
+    """ This function installs pre-made .config files
+        and any necessary patches for a particular architecture.
+
+        FIXME: Remove this for upstream klee-uclibc. People should 
+               just run `make menuconfig` themselves. It's not hard!
+    """
+    p = platform.machine()
+    logging.info('Setting up pre-made configure for...{}'.format(p))
+
+    patchDir = os.path.join(uclibcRoot, 'klee-config-patches', p)
+    if not os.path.exists(patchDir):
+        logging.error('"{}" does not exist. Cannot install pre-made .config file'.format(patchDir))
+        sys.exit(1)
+
+    configFile = os.path.join(patchDir, 'config')
+    if not os.path.exists(configFile):
+        logging.error('"{}" does not exist. Cannot install pre-made .config file'.format(patchDir))
+        sys.exit(1)
+
+
+    if p == 'x86_64':
+        logging.info('Installing .config file')
+        shutil.copy(configFile, os.path.join(uclibcRoot, '.config'))
+    else:
+        logging.error('Your architecture is not supported. You will need to run `make menuconfig` manually')
 
 
 def getAbsPathForToolInPathEnv(tool):

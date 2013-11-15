@@ -24,9 +24,12 @@ $ ./configure --make-llvm-lib
 
 $ ./configure --help
 
-4. [Optional] A uClibc configuration is provided for you (.config file root directory)
-   this may not be appropriate for your system. If you have build problems remove
-   this file and build your own configuration using (`make menuconfig`)
+4. By default a uClibc a pre built `.config` file will be added to the uClibc
+   root directory by the configure script. This is done to make compilation easier
+   for users.  However the --disable-prebuilt-config flag can be used to prevent a
+   `.config` file being added. If you wish to create your own `.config` you can do
+   so by running `make menuconfig` or `make config` after running the configure
+   script.
 
 5. Compile
 
