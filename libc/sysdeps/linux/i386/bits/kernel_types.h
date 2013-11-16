@@ -13,6 +13,9 @@
 #define _ASM_X86_POSIX_TYPES_32_H
 
 //typedef unsigned short	__kernel_dev_t; /*DWD*/
+typedef long __kernel_long_t;
+typedef unsigned long __kernel_ulong_t;
+
 typedef unsigned long	__kernel_ino_t;
 typedef unsigned short	__kernel_mode_t;
 typedef unsigned short	__kernel_nlink_t;
