@@ -129,6 +129,9 @@ def installPrebuiltConfig():
     if p == 'x86_64':
         logging.info('Installing .config file')
         shutil.copy(configFile, os.path.join(uclibcRoot, '.config'))
+    elif p == 'i686':
+        logging.info('Installing .config file')
+        shutil.copy(configFile, os.path.join(uclibcRoot, '.config'))
     else:
         logging.error('Your architecture is not supported. You will need to run `make menuconfig` manually')
 
