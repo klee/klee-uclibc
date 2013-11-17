@@ -16,6 +16,9 @@
 #define _ASM_X86_POSIX_TYPES_32_H
 #define _ASM_X86_POSIX_TYPES_64_H
 
+typedef long		__kernel_long_t;
+typedef unsigned long	__kernel_ulong_t;
+
 typedef unsigned long	__kernel_dev_t;
 typedef unsigned long	__kernel_ino_t;
 typedef unsigned int	__kernel_mode_t;

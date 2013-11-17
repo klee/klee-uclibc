@@ -1,5 +1,3 @@
-UCLIBC_TOP_DIR=/home/zamf/tmp/klee-uclibc
-LLVMROOTDIR=/home/zamf/llvm/llvm-2.6
 # Rules.make for uClibc
 #
 # Copyright (C) 2000-2006 Erik Andersen <andersen@uclibc.org>
@@ -33,16 +31,11 @@ endif
 ifndef CROSS
 CROSS=
 endif
-
-include $(LLVMROOTDIR)//Makefile.config
-LLVMTOOLDIR = $(LLVMROOTDIR)/Release/bin
-
-DODEBUG=y
-CC         = $(LLVMGCC) --emit-llvm $(KLEE_CFLAGS)
-AR         = $(LLVMTOOLDIR)/llvm-ar
-LD         = $(LLVMTOOLDIR)/llvm-ld
-NM         = $(LLVMTOOLDIR)/llvm-nm
-STRIPTOOL  = true
+CC         = $(CROSS)gcc
+AR         = $(CROSS)ar
+LD         = $(CROSS)ld
+NM         = $(CROSS)nm
+STRIPTOOL  = $(CROSS)strip
 
 INSTALL    = install
 LN         = ln
@@ -52,8 +45,10 @@ TAR        = tar
 STRIP_FLAGS ?= -x -R .note -R .comment
 
 # Select the compiler needed to build binaries for your development system
-HOSTCC     = $(LLVMGCC)
-BUILD_CFLAGS = -O2 -Wall --emit-llvm
+HOSTCC     = gcc
+BUILD_CFLAGS = -O2 -Wall
+# Override variables for KLEE build
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile.klee
 export ARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun.*/sparc/ -e s/sparc.*/sparc/ \
 				  -e s/arm.*/arm/ -e s/sa110/arm/ -e s/sh.*/sh/ \
 				  -e s/s390x/s390/ -e s/parisc.*/hppa/ \
