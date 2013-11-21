@@ -1,0 +1,506 @@
+#!/usr/bin/env python
+"""
+Configure the build of klee-uclibc. It can be built
+as a native library or as an LLVM bitcode archive.
+
+Information about configuration is written to console and
+more verbose information is writen to a log file (usually
+config.log)
+
+You can use the CC environment variable (or flag --with-cc) 
+to force a particular C compiler. e.g.
+
+$ CC=/usr/bin/clang ./configure
+
+If the forced compiler is a tool name (e.g. CC=clang) then
+the PATH is searched. Otherwise it is assumed to be a 
+relative or absolute path.
+
+If building an LLVM bitcode archive and CC is not set
+then this script will try and find a LLVM bitcode compiler
+in your path in the following order
+
+1. clang built inside `llvm-config --bindir`
+2. llvm-gcc in PATH
+3. clang in PATH
+
+"""
+
+import argparse
+import os
+import sys
+import logging
+import subprocess
+import pprint
+import platform
+import shutil
+
+uclibcRoot=os.path.dirname( os.path.abspath(__file__) )
+templateTarget= os.path.join( uclibcRoot, 'Makefile.klee')
+templateFile= os.path.join( uclibcRoot, 'Makefile.klee.in')
+configLogFile= os.path.join( uclibcRoot, 'config.log')
+
+
+def main(args):
+    # Log everything to file
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(levelname)s:: %(funcName)s() at line %(lineno)d ::%(message)s',
+                        filename=configLogFile,
+                        filemode='w'
+                        )
+
+    # Log the arguments used so that it is easier to reinvoke later.
+    logging.debug('Executing with command line:\n{} {}\n'.format( __file__, ' '.join(args)))
+
+    # Log to console too but by default be less verbose
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(logging.INFO)
+    consoleFormatter = logging.Formatter('%(levelname)s:%(message)s')
+    consoleHandler.setFormatter(consoleFormatter)
+    logging.getLogger().addHandler(consoleHandler) # Add extra handler to root logger
+
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    # Two different modes
+    meo = parser.add_mutually_exclusive_group(required=True)
+    meo.add_argument('-n','--make-native', help='Produce native binary library.', action='store_true')
+    meo.add_argument('-l','--make-llvm-lib', help='Produce library compiled as LLVM bitcode.', action='store_true')
+
+    parser.add_argument('--with-llvm-config', help='Path to llvm-config executable to use. If not set then llvm-config in the PATH environment will be used.', type=str)
+
+    parser.add_argument('--with-cc', help='Force C compiler to be used. If this and CC environment variable is not set then auto-detection will be detected.', type=str)
+    parser.add_argument('--enable-assertions', default=False, action='store_true', help='Enable assertions. (Default %(default)s)')
+    parser.add_argument('--enable-release', default=False, action='store_true', help='Enable Release mode. (Default %(default)s)')
+
+    parser.add_argument('--disable-prebuilt-config', default=False, action='store_true',
+                        help='Do not use pre-built config (+ any needed patches) to emulate legacy klee-uclibc. If you want to generate your own config use this option then run `make menuconfig`. (Default %(default)s)')
+
+
+    parser.add_argument('--log-level',type=str, default='info',choices=['debug','info','warning','error','critical'],
+                        help='Set console logging level output (Default %(default)s). Logging to "{}" is unaffected.'.format(configLogFile))
+
+
+    pargs = parser.parse_args(args)
+
+    # Configure the level for console output but leave file output untouched
+    consoleHandler.setLevel(level=getattr(logging, pargs.log_level.upper(), None))
+
+    # Force compiler if requested
+    cc = pargs.with_cc
+    if not cc:
+        cc = os.getenv('CC')
+    if cc:
+        logging.info('Forcing C compiler to be...{}'.format(cc))
+        if os.sep in cc:
+            # Absolute or relative path
+            cc = os.path.abspath(cc)
+        else:
+            # Search for tool in PATH
+            ccAbs = getAbsPathForToolInPathEnv(cc) 
+            if ccAbs == None:
+                logging.error('"{0}" is not in your path.'.format(cc))
+                sys.exit(1)
+            else:
+                cc = ccAbs
+
+        if not os.path.exists(cc):
+            logging.error('"{}" does not exist.'.format(cc))
+            sys.exit(1)
+
+        logging.info('Absolute path to compiler...{}'.format(cc))
+
+
+    if pargs.make_native:
+        handleNativeConfig(pargs, cc)
+    else:
+        handleLLVMConfig(pargs, cc)
+
+    uclibcConfigFile = os.path.join(uclibcRoot, '.config')
+
+    if pargs.disable_prebuilt_config:
+        logging.info('Not using pre-built config. You should run `make menuconfig` or `make config`')
+        if os.path.exists(uclibcConfigFile):
+            logging.warning('A pre-existing .config file was detected. You should probably remove it.')
+    else:
+        if os.path.exists(uclibcConfigFile):
+            logging.warning('Removing existing config file...{}'.format(uclibcConfigFile))
+            os.remove(uclibcConfigFile)
+        installPrebuiltConfig()
+
+
+def installPrebuiltConfig():
+    """ This function installs pre-made .config files
+        and any necessary patches for a particular architecture.
+
+        FIXME: Remove this for upstream klee-uclibc. People should 
+               just run `make menuconfig` themselves. It's not hard!
+    """
+    p = platform.machine()
+    logging.info('Setting up pre-made configure for...{}'.format(p))
+
+    patchDir = os.path.join(uclibcRoot, 'klee-premade-configs', p)
+    if not os.path.exists(patchDir):
+        logging.error('"{}" does not exist. Cannot install pre-made .config file'.format(patchDir))
+        sys.exit(1)
+
+    configFile = os.path.join(patchDir, 'config')
+    if not os.path.exists(configFile):
+        logging.error('"{}" does not exist. Cannot install pre-made .config file'.format(patchDir))
+        sys.exit(1)
+
+
+    if p == 'x86_64':
+        logging.info('Installing .config file')
+        shutil.copy(configFile, os.path.join(uclibcRoot, '.config'))
+    elif p == 'i686':
+        logging.info('Installing .config file')
+        shutil.copy(configFile, os.path.join(uclibcRoot, '.config'))
+    else:
+        logging.error('Your architecture is not supported. You will need to run `make menuconfig` manually')
+
+
+def getAbsPathForToolInPathEnv(tool):
+    # Use which program to get the path
+    r = runTool(['which', tool])
+
+    if r[0] == 0:
+        # decode needed for Python 3.x as we get bytes not str
+        return r[1].replace('\n','').lstrip().rstrip()
+    else:
+        return None
+
+    
+
+def runTool(cmd):
+    """
+    return (returnCode, output) from tool
+    """
+    retCode=0
+    output=""
+    try:
+        logging.debug('Executing {0}'.format(pprint.pformat(cmd)))
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        retCode = e.returncode
+        output = e.output
+
+    # Clean up output
+    output = output.decode()
+
+    logging.debug('Execution completed with return code:{}'.format(retCode))
+    logging.debug('Execution completed with output:"{}"'.format(output))
+    return (retCode, output)
+
+def handleCommonOptions(pargs, subs):
+    if pargs.enable_assertions:
+        subs['ASSERTS'] = 'y'
+        logging.info('Enabling assertions')
+    else:
+        logging.info('Disabling assertions')
+        subs['ASSERTS'] = 'n'
+
+    if pargs.enable_release:
+        logging.info('Configuring for Release build')
+        subs['DEBUG'] = 'n'
+    else:
+        logging.info('Configuring for Debug build')
+        subs['DEBUG'] = 'y'
+
+
+def handleNativeConfig(pargs, cc=None):
+    logging.info('Configuring for native archive')
+
+    subs = { 'EMIT_LLVM':'', # Building natively so we don't want LLVM Bitcode
+             'TOOLDIR':'' # Native compiler tools should be in PATH
+           } 
+    handleCommonOptions(pargs, subs)
+
+
+    def searchPath(cc, lookFor):
+        if not cc:
+            logging.info('Looking for...{}'.format(lookFor))
+            ccNew = getAbsPathForToolInPathEnv(lookFor)
+
+            if ccNew:
+                logging.info('Found...{}'.format(ccNew))
+            else:
+                logging.info('Could not find {}'.format(lookForNew))
+
+            return ccNew
+        else:
+            return cc
+
+
+    # Detect compiler if not forced
+    if not cc:
+        cc=searchPath(cc, 'llvm-gcc')
+        cc=searchPath(cc, 'clang')
+        cc=searchPath(cc, 'cc')
+
+    # Test compiler
+    #FIXME
+    logging.info('Using CC...{}'.format(cc))
+    subs['CC'] = cc
+
+    # Check tools are present
+    tools = { 'LINKER':'ld',
+              'ARCHIVER':'ar',
+              'NM':'nm',
+              'OBJDUMP':'objdump'
+            }
+    for (name, executable) in tools.items():
+        if not getAbsPathForToolInPathEnv(executable):
+            logging.error('Could not find {} in PATH'.format(executable))
+            sys.exit(1)
+
+        subs[name] = executable
+
+    # Do substitution
+    logging.debug('Using template substitutions \n{} \nfor file "{}"'.format(
+                  pprint.pformat(subs),
+                  templateTarget)
+                 )
+
+    doTemplate(subs, templateFile, templateTarget)
+
+    
+
+def handleLLVMConfig(pargs, cc=None):
+    # Substitutions
+    subs = { 'EMIT_LLVM':'-emit-llvm'}
+    handleCommonOptions(pargs, subs)
+
+    logging.info('Configuring for LLVM bitcode archive')
+
+    llvmConfigTool = pargs.with_llvm_config
+    if not llvmConfigTool:
+        llvmConfigTool = getAbsPathForToolInPathEnv('llvm-config')
+    else:
+        llvmConfigTool = os.path.abspath(llvmConfigTool)
+        if not os.path.exists(llvmConfigTool):
+            logging.error('"{}" does not exist. Cannot use as llvm-config tool'.format(llvmConfigTool))
+            sys.exit(1)
+
+    logging.info('Using llvm-config at...{}'.format(llvmConfigTool))
+
+    # Detect tool directory
+    (retCode, output) = runTool([llvmConfigTool, '--bindir'])
+    if retCode != 0:
+        logging.error('Failed to execute llvm-config:\n{}'.format(output))
+        sys.exit(1)
+
+    llvmToolDir = output.replace('\n','').lstrip().rstrip()
+    if not os.path.exists(llvmToolDir):
+        logging.error('The tool directory ({})reported by llvm-config does not exist.'.format(llvmToolDir))
+        sys.exit(1)
+
+    logging.info('Using llvm tool dir...{}'.format(llvmToolDir))
+    subs['TOOLDIR'] = llvmToolDir + os.sep # Trailing slash is needed in Makefile
+
+    # Check for the needed llvm tools
+    llvmDeps = {
+        'NM' : ['llvm-nm'],
+        'ARCHIVER' : ['llvm-ar'],
+        'LINKER': ['llvm-link', 'llvm-ld' ], # Two possible tools to use as linker
+        'OBJDUMP': ['llvm-objdump']
+    }
+
+    for (name,toolNames) in llvmDeps.items():
+        found=False
+        for t in toolNames:
+            absToolPath = os.path.join( llvmToolDir, t)
+            if os.path.exists(absToolPath):
+                logging.info('Found "{}".'.format(absToolPath))
+                found=True
+                subs[name] = t # Add substitution
+                break
+
+        if not found:
+            logging.error('Could not find needed tool. Tried {}'.format(llvmDeps))
+            sys.exit(1)
+
+    if not cc:
+        cc = findBitCodeCompiler(llvmToolDir)
+        if not cc:
+            logging.error('Failed to find a working LLVM bitcode compiler')
+            sys.exit(1)
+    else:
+        if not testBitCodeCompiler(cc, llvmToolDir):
+            logging.error('LLVM Bitcode compiler does not work')
+            sys.exit(1)
+
+    # Add compiler to substitutions
+    logging.info('Using LLVM Bitcode Compiler...{}'.format(cc))
+    subs['CC'] = cc
+
+    logging.debug('Using template substitutions \n{} \nfor file "{}"'.format(
+                  pprint.pformat(subs),
+                  templateTarget)
+                 )
+
+    doTemplate(subs, templateFile, templateTarget)
+
+def doTemplate(subs, src, dest):
+    import re
+    """
+        Do a Template substitution using @KEY@ syntax.
+
+        subs : Dictionary of substitutions
+        src  : File to apply template to
+        dest : The destination for templated file.
+    """
+
+    # Remove old destination
+    if os.path.exists(dest):
+        logging.info('Removing template destination "{}"'.format(dest))
+        os.remove(dest)
+
+    if not os.path.exists(src):
+        logging.error('Template source "{}" does not exist'.format(src))
+        sys.exit(1)
+
+    # Read file into string and do replacements
+    with open(src,'r') as f:
+        srcString = f.read()
+
+        # Do replacements
+        for (oldString, replacement) in subs.items():
+            srcString = srcString.replace('@' + oldString + '@', replacement)
+            
+    # Write templated string to file
+    logging.info('Writing templated file to "{}"'.format(dest))
+    with open(dest,'w') as f:
+        f.write(srcString)
+
+
+
+def findBitCodeCompiler(llvmToolDir):
+    """
+        Search for LLVM Bitcode compiler.
+
+        Returns absolute path to compiler. The compiler will
+        be tested against the tools in llvmToolDir
+    """
+    logging.info('Searching for LLVM Bitcode compiler...')
+
+    # First try clang in LLVM Build directory
+    ccPath = os.path.join(llvmToolDir, 'clang')
+    if os.path.exists( ccPath):
+        logging.info('Found clang in LLVM Build dir...{}'.format(ccPath))
+
+        if not testBitCodeCompiler(ccPath, llvmToolDir):
+            ccPath=None
+    else:
+        ccPath=None
+    
+    # If that failed try llvm-gcc in PATH
+    if not ccPath:
+        llvmgcc = getAbsPathForToolInPathEnv('llvm-gcc')
+        if llvmgcc:
+            logging.info('Found llvm-gcc in PATH...{}'.format(llvmgcc))
+            if testBitCodeCompiler(llvmgcc, llvmToolDir):
+                ccPath = llvmgcc
+                
+    # If that failed try clang in PATH
+    if not ccPath:
+        clang = getAbsPathForToolInPathEnv('clang')
+        if clang:
+            logging.info('Found clang in PATH...{}'.format(llvmgcc))
+            if testBitCodeCompiler(clang, llvmToolDir):
+                ccPath = clang
+
+    return ccPath
+        
+
+def testBitCodeCompiler(cc, llvmToolDir):
+    """
+        Returns true if cc is working LLVM bitcode
+        compiler.
+
+        This works by compiling a small program to LLVM bitcode using cc
+        then this is converted back to LLVM assembly using llvm-dis.
+        If there is an incompatibility between llvm-dis and the bitcode
+        compiler it will hopefully be detected here.
+
+        cc : Absolute path to bitcode compiler
+    """
+    import tempfile
+    logging.info('Testing LLVM Bitcode compiler...{}'.format(cc))
+
+    # Get temporary file name for output
+    bitCodeFileName=None
+    cProgramFileName=None
+    llvmAsFileName=None
+
+    def cleanUp():
+        if bitCodeFileName and os.path.exists(bitCodeFileName): os.remove(bitCodeFileName)
+        if cProgramFileName and os.path.exists(cProgramFileName): os.remove(cProgramFileName)
+        if llvmAsFileName and os.path.exists(llvmAsFileName): os.remove(llvmAsFileName)
+        pass
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix='.bc', delete=False) as f:
+            bitCodeFileName = f.name
+
+        if not bitCodeFileName:
+            logging.error('Failed to generated temporary file name')
+            sys.exit(1)
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
+            # Write a simple C program to tempfile
+            f.write('int main() { return 0; }')
+            cProgramFileName = f.name
+
+        if not cProgramFileName:
+            msg='Failed to generated temporary file name'
+            logging.error(msg)
+            raise Exception(msg)
+
+        (retCode, ccOutput) = runTool([cc, 
+                                       '-c',
+                                       '-g', 
+                                       '-emit-llvm', 
+                                       cProgramFileName, 
+                                       '-o', bitCodeFileName]
+                                      )
+
+        if retCode != 0:
+            logging.info('Compiler failed with output:\n{}'.format(ccOutput))
+            cleanUp()
+            return False
+
+        logging.debug('{} succeeded'.format(cc))
+        llvmDis = os.path.join(llvmToolDir, 'llvm-dis')
+
+        if not os.path.exists(llvmDis):
+            logging.error('Cannot find "{}"'.format(llvmDis))
+            cleanUp()
+            return False
+
+        # Get temporary file name for LLVM assembly
+        with tempfile.NamedTemporaryFile(suffix='.ll', delete=False) as f:
+            llvmAsFileName = f.name
+
+        if not llvmAsFileName:
+            msg='Failed to generated temporary file name'
+            logging.error(msg)
+            raise Exception(msg)
+
+        (retCode, llvmDisOutput) = runTool([ llvmDis, '-o=' + llvmAsFileName, bitCodeFileName])
+
+        if retCode != 0:
+            logging.info('Conversion of LLVM Bitcode to LLVM Assembly failed with output:\n{}'.format(llvmDisOutput))
+            cleanUp()
+            return False
+
+    except Exception as e:
+        cleanUp()
+        raise
+    
+    cleanUp()
+    logging.info('Compiler {} works'.format(cc))
+    return True
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

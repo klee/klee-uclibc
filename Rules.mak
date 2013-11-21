@@ -47,6 +47,10 @@ STRIP_FLAGS ?= -x -R .note -R .comment
 # Select the compiler needed to build binaries for your development system
 HOSTCC     = gcc
 BUILD_CFLAGS = -O2 -Wall
+
+# Modify Makefile variables for KLEE build
+include  $(dir $(lastword $(MAKEFILE_LIST)))/Makefile.klee
+
 export ARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun.*/sparc/ -e s/sparc.*/sparc/ \
 				  -e s/arm.*/arm/ -e s/sa110/arm/ -e s/sh.*/sh/ \
 				  -e s/s390x/s390/ -e s/parisc.*/hppa/ \

@@ -25,6 +25,7 @@ lib/
 #Configure files
 Makefile.klee
 .config
+config.log
 
 # make menuconfig files
 extra/config/conf.o
