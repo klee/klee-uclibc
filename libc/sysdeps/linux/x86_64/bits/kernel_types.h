@@ -4,8 +4,17 @@
  * our private content, and not the kernel header, will win.
  *  -Erik
  */
-#ifndef _ASM_X86_64_POSIX_TYPES_H
+
+#if !defined(__ARCH_I386_POSIX_TYPES_H) && \
+    !defined(_ASM_X86_64_POSIX_TYPES_H) && \
+    !defined(_ASM_X86_POSIX_TYPES_32_H) && \
+    !defined(_ASM_X86_POSIX_TYPES_64_H)
+
 #define _ASM_X86_64_POSIX_TYPES_H
+#define __ARCH_I386_POSIX_TYPES_H
+
+#define _ASM_X86_POSIX_TYPES_32_H
+#define _ASM_X86_POSIX_TYPES_64_H
 
 typedef long		__kernel_long_t;
 typedef unsigned long	__kernel_ulong_t;
