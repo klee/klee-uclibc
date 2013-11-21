@@ -36,7 +36,14 @@ __BEGIN_DECLS
    If there get to be more than 16 distinct characteristics,
    __ctype_mask_t will need to be adjusted. */
 
-# define _ISbit(bit)	(1 << (bit))
+/* DWD - make it work for both big and little endian machines */
+//# define _ISbit(bit)   (1 << (bit))
+# include <endian.h>
+# if __BYTE_ORDER == __BIG_ENDIAN
+#  define _ISbit(bit)	(1 << (bit))
+# else /* __BYTE_ORDER == __LITTLE_ENDIAN */
+#  define _ISbit(bit)	((bit) < 8 ? ((1 << (bit)) << 8) : ((1 << (bit)) >> 8))
+# endif
 
 enum
 {

@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import os, os.path, sys, shutil
+import datetime
+from optparse import OptionParser
+
+
+def main(args):
+  op = OptionParser("Usage: %prog --with-gcc|--with-llvm=<llvm-root-dir>")
+  op.add_option('','--with-gcc', dest='withGCC', action='store_true', 
+                default=False,
+                help='Compile a gcc version.')
+
+  op.add_option('','--with-llvm', dest='withLLVM', action='store', 
+                type="string", default='', 
+                help='Compile with LLVM, residing in the given directory.')
+
+  opts,args = op.parse_args()
+
+  if not opts.withGCC and opts.withLLVM == '':
+    op.error("You need to specify either --with-gcc or --with-llvm.")
+
+  if (opts.withGCC and opts.withLLVM != ''):
+    op.error("Use only one of --with-gcc and --with-llvm.")
+    
+  if (opts.withGCC):
+    shutil.copyfile("Rules.mak.gcc", "Rules.mak")
+    print "Using gcc... done"
+  else:
+    if not os.path.exists(opts.withLLVM):
+      op.error("Cannot find LLVM root directory.")
+    
+    os.system('echo "UCLIBC_TOP_DIR=`pwd`" > Rules.mak')
+    command = 'echo "LLVMROOTDIR=' + opts.withLLVM + '" >> Rules.mak';  os.system(command)
+    os.system('cat Rules.mak.llvm >> Rules.mak')
+    print "Using llvm... done"
+    
+
+if __name__ == '__main__':
+  main(sys.argv)

@@ -17,7 +17,25 @@ int fprintf(FILE * __restrict stream, const char * __restrict format, ...)
 	int rv;
 
 	va_start(arg, format);
-	rv = vfprintf(stream, format, arg);
+
+/* DWD/CrC/PG */
+
+  //rv = vfprintf(stream, format, arg);
+
+// ok, this is really subtle, but if we are NOT running with symbolic
+// printfs (for improved speed), we should simply print stdout and
+// stderr to native stdout using vprintf, but if we are running with
+// symbolic printfs (for completeness, esp. for cross-checking), we
+// should always run instrumented code (e.g., vfprintf)
+#ifdef KLEE_SYM_PRINTF
+        if (0) {
+#else
+        if (stream==stdout || stream==stderr) {
+#endif
+          rv = vprintf(format, arg);
+        } else {
+          rv = vfprintf(stream, format, arg);
+        }
 	va_end(arg);
 
 	return rv;

@@ -1,0 +1,177 @@
+Compiling uclibc with LLVM
+updated 19-Oct-2007
+(created by Daniel Dunbar)
+
+
+To compile uclibc (0.9.29) with LLVM, I had to make the following changes:
+
+
+******** STEP ONE ******** 
+1) In Rules.mak, set the vars below to the below values instead of the normal gcc toolchain:
+CC         = llvm-gcc --emit-llvm 
+AR         = llvm-ar
+LD         = llvm-ld
+NM         = llvm-nm
+STRIPTOOL  = donothing.sh  # may need to use an absolute path
+HOSTCC     = llvm-gcc 
+BUILD_CFLAGS = -O2 -Wall --emit-llvm 
+
+
+******** STEP TWO ******** 
+2) Create a executable shell script donothing.sh in the uclibc root folder which does
+   nothing and is called 'donothing.sh'.  I just echo something in mine:
+#!/bin/sh
+echo "I am doing nothing!"
+
+
+******** STEP THREE ******** 
+3) Modify libc/misc/internals/__uClibc_main.c so that __init_stdio() is not called:
+#if 0
+    if (likely(_stdio_init != NULL))
+        _stdio_init();
+#endif
+
+TODO: Daniel doesn't end up doing this in the current version.
+
+Also, what does this #define mean?  There is no comment.
+
++/* removes a warning */
++#define __UCLIBC_FORMAT_SHARED_FLAT__
++
+
+
+******** STEP FOUR ******** 
+4) Modify include/ctype.h so that it defines the _ISbit(bit) macro as follows:
+
+# include <endian.h>
+# if __BYTE_ORDER == __BIG_ENDIAN
+#  define _ISbit(bit)	(1 << (bit))
+# else /* __BYTE_ORDER == __LITTLE_ENDIAN */
+#  define _ISbit(bit)	((bit) < 8 ? ((1 << (bit)) << 8) : ((1 << (bit)) >> 8))
+# endif
+
+
+******** STEP FIVE ******** 
+5) Don't compile with stdio, sysdeps, or malloc.
+
+remove stdio and sysdeps from libc/Makefile.in:
+#include $(libc_DIR)/sysdeps/Makefile.in
+#include $(libc_DIR)/stdio/Makefile.in
+
+TODO: Daniel doesn't end up commenting out stdio/Makefile.in
+
+malloc is in libc/stdlib/malloc-standard/Makefile.in:
+CSRC := #malloc.c calloc.c realloc.c free.c memalign.c mallopt.c mallinfo.c
+
+
+******** STEP SIX ******** 
+Note: Without step 6, the actual symbols are not shown listed in the object file outputs 
+      when compiling with llvm!  Instad, __GI_strcpy would be listed instead of strcpy.  
+      Compiling with gcc causes both to be listed (which seems to be the correct behavior).  
+      This may be a llvm bug (submitted to their bugzilla as bug #1655).
+
+
+6) In include/libc-symbols.h, make libc_hidden_proto etc. always translate to nop by
+   commenting out the alternate condition in #if:
+/*
+#if !defined NOT_IN_libc
+# define libc_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
+# define libc_hidden_def(name) hidden_def (name)
+# define libc_hidden_weak(name) hidden_weak (name)
+# define libc_hidden_ver(local, name) hidden_ver (local, name)
+# define libc_hidden_data_def(name) hidden_data_def (name)
+# define libc_hidden_data_weak(name) hidden_data_weak (name)
+# define libc_hidden_data_ver(local, name) hidden_data_ver (local, name)
+#else
+*/
+# define libc_hidden_proto(name, attrs...)
+# define libc_hidden_def(name)
+# define libc_hidden_weak(name)
+# define libc_hidden_ver(local, name)
+# define libc_hidden_data_def(name)
+# define libc_hidden_data_weak(name)
+# define libc_hidden_data_ver(local, name)
+/*
+#endif
+*/
+
+
+******** CONFIG NOTES ********
+You need to configure uclibc so that it compiles non-architecture specific string functions since 
+LLVM does not like inline asm (I believe).  If you use do menuconfig, you can uncheck the option 
+to use arch-specific inline asm by going to 'String and Stdio Support' and unchecking it. 
+
+In other words, do not define the following:
+UCLIBC_HAS_STRING_GENERIC_OPT
+UCLIBC_HAS_STRING_ARCH_OPT
+
+Also, do enable Extended Locale with the followings options to get __ctype_b_loc which is needed 
+by strtoul and others:
+UCLIBC_HAS_WCHAR=y
+UCLIBC_HAS_LOCALE=y
+UCLIBC_PREGENERATED_LOCALE_DATA=y
+UCLIBC_DOWNLOAD_PREGENERATED_LOCALE_DATA=y
+UCLIBC_HAS_XLOCALE=y
+
+Also, pthreads aren't needed so do not define: 
+UCLIBC_HAS_THREADS
+
+Also, in the Makefile.in, comment out all the libraries we don't need (i.e. everything except
+libc and locale):
+#include $(top_srcdir)ldso/Makefile.in
+#include $(top_srcdir)libcrypt/Makefile.in
+#include $(top_srcdir)libintl/Makefile.in
+#include $(top_srcdir)libm/Makefile.in
+#include $(top_srcdir)libnsl/Makefile.in
+#include $(top_srcdir)libresolv/Makefile.in
+#include $(top_srcdir)libutil/Makefile.in
+#include $(top_srcdir)libpthread/Makefile.in
+#include $(top_srcdir)librt/Makefile.in
+
+TODO: Daniel doesn't end up commenting out these libraries.
+
+---
+
+We downloaded uClibc 0.9.29 and made changes to these files and added some
+extra files, which should be visible in svn diffs:
+
+Added files (from old Klee uclibc repo):
+
+TODO: where are these header files taken from?
+
+A      .config
+A      donothing.sh
+A      extra/locale/uClibc-locale-030818.tgz
+A      include/kernel_types.h
+A      include/pthread.h
+A      include/semaphore.h
+A      Rules.mak.gcc
+A      Rules.mak.llvm
+
+
+Modified files:
+
+M      BUILD_W_LLVM_README
+M      extra/locale/gen_wc8bit.c
+M      include/byteswap.h
+M      include/ctype.h
+M      include/libc-symbols.h
+M      include/locale.h
+M      libc/Makefile.in
+M      libc/misc/internals/__uClibc_main.c
+M      libc/misc/locale/locale.c
+M      libc/stdio/_fopen.c
+M      libc/stdio/fprintf.c
+M      libc/stdio/printf.c
+M      libc/stdio/_scanf.c
+M      libc/stdio/_stdio.c
+M      libc/stdio/vprintf.c
+M      libc/stdlib/malloc-standard/Makefile.in
+M      libc/stdlib/malloc-standard/malloc.c
+M      libc/string/i386/strlen.c
+M      libc/sysdeps/linux/common/bits/locale.h
+M      libc/sysdeps/linux/common/bits/uClibc_locale.h
+M      libc/sysdeps/linux/i386/bits/kernel_types.h
+M      Makefile.in
+M      Rules.mak
+

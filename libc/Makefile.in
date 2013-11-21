@@ -23,7 +23,8 @@ LIBS-libc.so := $(interp) $(ldso) $(top_builddir)lib/$(NONSHARED_LIBNAME)
 libc_FULL_NAME := libuClibc-$(VERSION).so
 
 # this comes first, so duplicate removal works correctly
-include $(libc_DIR)/sysdeps/Makefile.in
+# DWD
+#include $(libc_DIR)/sysdeps/Makefile.in
 
 include $(libc_DIR)/misc/Makefile.in
 include $(libc_DIR)/pwd_grp/Makefile.in
