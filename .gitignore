@@ -26,6 +26,7 @@ lib/
 Makefile.klee
 .config
 config.log
+.config.old
 
 # make menuconfig files
 extra/config/conf.o
@@ -39,3 +40,9 @@ extra/config/lxdialog/yesno.o
 extra/config/mconf.o
 extra/config/zconf.tab.o
 extra/config/mconf
+extra/config/.depend
+
+extra/config/conf
+extra/config/lex.zconf.c
+extra/config/zconf.hash.c
+extra/config/zconf.tab.c
