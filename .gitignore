@@ -1,0 +1,40 @@
+# built object files
+*.os
+
+# symlinks
+include/bits/*
+include/dl-osinfo.h
+include/fpu_control.h
+include/hp-timing.h
+include/sys/acct.h
+include/sys/debugreg.h
+include/sys/epoll.h
+include/sys/inotify.h
+include/sys/io.h
+include/sys/perm.h
+include/sys/prctl.h
+include/sys/procfs.h
+include/sys/ptrace.h
+include/sys/reg.h
+include/sys/ucontext.h
+include/sys/user.h
+
+# Build libraries
+lib/
+
+#Configure files
+Makefile.klee
+.config
+
+# make menuconfig files
+extra/config/conf.o
+extra/config/kxgettext.o
+extra/config/lxdialog/checklist.o
+extra/config/lxdialog/inputbox.o
+extra/config/lxdialog/menubox.o
+extra/config/lxdialog/textbox.o
+extra/config/lxdialog/util.o
+extra/config/lxdialog/yesno.o
+extra/config/mconf.o
+extra/config/zconf.tab.o
+extra/config/mconf
