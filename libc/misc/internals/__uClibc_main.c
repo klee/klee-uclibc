@@ -75,6 +75,9 @@ uintptr_t __guard attribute_relro;
 
 #endif /* !SHARED */
 
+/* This is a DISGUSTING HACK */
+#define __UCLIBC_FORMAT_SHARED_FLAT__
+
 /*
  * Prototypes.
  */
@@ -234,7 +237,6 @@ void __uClibc_init(void)
      */
     if (likely(_stdio_init != NULL))
 	_stdio_init();
-
 }
 libc_hidden_def(__uClibc_init)
 
