@@ -24,7 +24,7 @@ $ ./configure --make-llvm-lib
 
 $ ./configure --help
 
-4. By default a uClibc a pre built `.config` file will be added to the uClibc
+4. By default a uClibc pre built `.config` file will be added to the uClibc
    root directory by the configure script. This is done to make compilation easier
    for users.  However the --disable-prebuilt-config flag can be used to prevent a
    `.config` file being added. If you wish to create your own `.config` you can do
@@ -41,4 +41,5 @@ which is excluded by default, use:
 
 make KLEE_CFLAGS="-DKLEE_SYM_PRINTF"
 
-To compile in optimized mode, add "DODEBUG=n"
+To compile in optimized mode use the --enable-release flag. Warning
+things might break if you do this.
