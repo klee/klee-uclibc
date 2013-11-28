@@ -1,3 +1,5 @@
+/* DWD/CrC */
+#ifdef KLEE_SYM_PRINTF
 /* Copyright (C) 2004       Manuel Novoa III    <mjn3@codepoet.org>
  *
  * GNU Library General Public License (LGPL) version 2 or later.
@@ -14,3 +16,4 @@ int vprintf(const char * __restrict format, va_list arg)
 {
 	return vfprintf(stdout, format, arg);
 }
+#endif
