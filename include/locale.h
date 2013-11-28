@@ -39,7 +39,10 @@ __BEGIN_DECLS
 #define LC_COLLATE        __LC_COLLATE
 #define LC_MONETARY       __LC_MONETARY
 #define LC_MESSAGES       __LC_MESSAGES
-#if 0
+
+/* DWD */
+//#if 0
+#if 1
 #define LC_PAPER	  __LC_PAPER
 #define LC_NAME		  __LC_NAME
 #define LC_ADDRESS	  __LC_ADDRESS
