@@ -7,9 +7,16 @@
 
 #include "_stdio.h"
 
+/*DWD*/
+#if 0
 libc_hidden_proto(isatty)
 libc_hidden_proto(open)
 libc_hidden_proto(fcntl)
+#else
+// These are implemented internally inside KLEE
+extern __typeof(open) __libc_open;
+extern __typeof(fcntl) __libc_fcntl;
+#endif
 
 /*
  * Cases:
@@ -123,7 +130,9 @@ FILE attribute_hidden *_stdio_fopen(intptr_t fname_or_mode,
 		/* NOTE: fopencookie needs changing if the basic check changes! */
 		if (((i & (((int) fname_or_mode) + 1)) != i) /* Basic agreement? */
 			|| (((open_mode & ~((__mode_t) fname_or_mode)) & O_APPEND)
-				&& fcntl(filedes, F_SETFL, O_APPEND))	/* Need O_APPEND. */
+        /*DWD*/
+				//&& fcntl(filedes, F_SETFL, O_APPEND))	/* Need O_APPEND. */
+				&& __libc_fcntl(filedes, F_SETFL, O_APPEND))	/* Need O_APPEND. */
 			) {
 			goto DO_EINVAL;
 		}
@@ -132,7 +141,9 @@ FILE attribute_hidden *_stdio_fopen(intptr_t fname_or_mode,
 										& O_LARGEFILE) );
 	} else {
 		__STDIO_WHEN_LFS( if (filedes < -1) open_mode |= O_LARGEFILE );
-		if ((stream->__filedes = open(((const char *) fname_or_mode),
+    /*DWD*/
+		//if ((stream->__filedes = open(((const char *) fname_or_mode),
+		if ((stream->__filedes = __libc_open(((const char *) fname_or_mode),
 									  open_mode, 0666)) < 0) {
 			goto FREE_STREAM;
 		}
