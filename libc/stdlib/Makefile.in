@@ -5,9 +5,10 @@
 # Licensed under the LGPL v2.1, see the file COPYING.LIB in this tarball.
 #
 
-include $(top_srcdir)libc/stdlib/malloc/Makefile.in
-include $(top_srcdir)libc/stdlib/malloc-simple/Makefile.in
-include $(top_srcdir)libc/stdlib/malloc-standard/Makefile.in
+# KLEE has internal implementation of malloc, etc..
+#include $(top_srcdir)libc/stdlib/malloc/Makefile.in
+#include $(top_srcdir)libc/stdlib/malloc-simple/Makefile.in
+#include $(top_srcdir)libc/stdlib/malloc-standard/Makefile.in
 
 CSRC := \
 	abort.c getenv.c mkdtemp.c mktemp.c realpath.c mkstemp.c \
