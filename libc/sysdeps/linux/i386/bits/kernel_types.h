@@ -10,8 +10,9 @@
 #if !defined(__ARCH_I386_POSIX_TYPES_H) && !defined(_ASM_X86_64_POSIX_TYPES_H)
 #define _ASM_X86_64_POSIX_TYPES_H
 #define __ARCH_I386_POSIX_TYPES_H
+#define _ASM_X86_POSIX_TYPES_32_H
 
-typedef unsigned short	__kernel_dev_t;
+//typedef unsigned short	__kernel_dev_t; /*DWD*/
 typedef unsigned long	__kernel_ino_t;
 typedef unsigned short	__kernel_mode_t;
 typedef unsigned short	__kernel_nlink_t;
@@ -34,7 +35,7 @@ typedef unsigned int	__kernel_uid32_t;
 typedef unsigned int	__kernel_gid32_t;
 typedef unsigned short	__kernel_old_uid_t;
 typedef unsigned short	__kernel_old_gid_t;
-typedef __kernel_dev_t	__kernel_old_dev_t;
+//typedef __kernel_dev_t	__kernel_old_dev_t; /*DWD*/
 typedef long long	__kernel_loff_t;
 
 typedef struct {
