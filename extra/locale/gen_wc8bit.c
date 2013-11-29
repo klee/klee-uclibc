@@ -18,7 +18,10 @@
 #ifndef _WCTYPE_H
 #define _WCTYPE_H
 #endif
-#include UCLIBC_CTYPE_HEADER
+
+/* DWD */
+//#include UCLIBC_CTYPE_HEADER
+#include "../../include/bits/uClibc_ctype.h"
 
 
 /*  #define CTYPE_PACKED */

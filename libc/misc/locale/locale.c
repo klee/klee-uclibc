@@ -926,13 +926,14 @@ void attribute_hidden _locale_init_l(__locale_t base)
 #ifdef __UCLIBC_MJN3_ONLY__
 #warning TODO: Initialize code2flag correctly based on locale_mmap.
 #endif
-	base->code2flag = __code2flag;
-
+	base->code2flag = __code2flag;	
 
 	_locale_set_l(C_LOCALE_SELECTOR, base);
 }
 
-void _locale_init(void) attribute_hidden;
+/*DWD*/
+//void _locale_init(void) attribute_hidden;
+void _locale_init(void);
 void _locale_init(void)
 {
 	/* TODO: mmap the locale file  */
@@ -1313,7 +1314,9 @@ __locale_t newlocale(int category_mask, const char *locale, __locale_t base)
 	}
 #else
 	if (!base) {
-		if ((base = malloc(sizeof(__uclibc_locale_t))) == NULL) {
+    /*DWD*/
+    //if ((base = malloc(sizeof(__uclibc_locale_t))) == NULL) {
+		if ((base = calloc(1, sizeof(__uclibc_locale_t))) == NULL) {
 			return base;
 		}
 		_locale_init_l(base);

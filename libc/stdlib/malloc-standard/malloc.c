@@ -761,6 +761,9 @@ static int __malloc_largebin_index(unsigned int sz)
     if (x >= 0x10000) return NBINS-1;
 
     /* On intel, use BSRL instruction to find highest bit */
+
+/* DWD - commented out subsequent 'if defined' */
+/*
 #if defined(__GNUC__) && defined(i386)
 
     __asm__("bsrl %1,%0\n\t"
@@ -768,6 +771,7 @@ static int __malloc_largebin_index(unsigned int sz)
 	    : "g"  (x));
 
 #else
+*/
     {
 	/*
 	   Based on branch-free nlz algorithm in chapter 5 of Henry
@@ -784,7 +788,8 @@ static int __malloc_largebin_index(unsigned int sz)
 	x = (x << m) >> 14;
 	m = 13 - n + (x & ~(x>>1));
     }
-#endif
+//#endif
+/* DWD end */
 
     /* Use next 2 bits to create finer-granularity bins */
     return NSMALLBINS + (m << 2) + ((sz >> (m + 6)) & 3);

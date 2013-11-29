@@ -100,6 +100,8 @@ libc_hidden_proto(isatty)
 /**********************************************************************/
 /* First we need the standard files. */
 
+/* DWD - changed _stdio_streams */
+#if 0
 #ifdef __STDIO_BUFFERS
 static unsigned char _fixed_buffers[2 * BUFSIZ];
 #endif
@@ -124,6 +126,30 @@ static FILE _stdio_streams[] = {
 							 NULL, \
 							 0 )
 };
+/* DWD - new version  of _stdio_streams */
+#else
+static FILE _stdio_streams[] = {
+	__STDIO_INIT_FILE_STRUCT(_stdio_streams[0], \
+							 __FLAG_NBF|__FLAG_READONLY, \
+							 0, \
+							 _stdio_streams + 1, \
+							 0, \
+							 0 ),
+	__STDIO_INIT_FILE_STRUCT(_stdio_streams[1], \
+							 __FLAG_NBF|__FLAG_WRITEONLY, \
+							 1, \
+							 _stdio_streams + 2, \
+							 0, \
+							 0 ),
+	__STDIO_INIT_FILE_STRUCT(_stdio_streams[2], \
+							 __FLAG_NBF|__FLAG_WRITEONLY, \
+							 2, \
+							 0, \
+							 0, \
+							 0 )
+};
+#endif
+/* DWD end */
 
 FILE *stdin  = _stdio_streams;
 FILE *stdout = _stdio_streams + 1;
