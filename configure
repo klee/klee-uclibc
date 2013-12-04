@@ -571,12 +571,14 @@ int main()
 
     """
     logging.info('Checking for ncurses...')
+    outputName='a.out'
     with tempfile.NamedTemporaryFile(mode='w+', suffix='.c') as f:
         f.write(src)
         f.flush()
-        (returnCode, output) = runTool([cc, f.name, '-lncurses'])
+        (returnCode, output) = runTool([cc, f.name, '-lncurses', '-o', outputName])
 
         if returnCode == 0:
+            os.remove(outputName)
             return True
 
         logging.error('Failed to find ncurses. Compiler said:\n{}'.format(output))
