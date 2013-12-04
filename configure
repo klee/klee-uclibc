@@ -26,9 +26,14 @@ in your path in the following order
 
 """
 
-import argparse
-import os
 import sys
+try:
+    import argparse
+except ImportError:
+    print("Failed to import argparse. Your python version is probably too old")
+    sys.exit(1)
+
+import os
 import logging
 import subprocess
 import pprint
