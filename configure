@@ -206,6 +206,33 @@ def handleCommonOptions(pargs, subs):
         logging.info('Configuring for Debug build')
         subs['DEBUG'] = 'y'
 
+def determineHostCompiler(cc):
+    """
+        This is a disgusting hack.
+        llvm-gcc out of the box can't do linking on some systems, where
+        some object files are missing:
+
+            /usr/bin/ld: cannot find crt1.o: No such file or directory
+            /usr/bin/ld: cannot find crti.o: No such file or directory
+
+        This can be fixed but doing...
+
+        $ cd /path/to/llvm-gcc/bin/lib/gcc/x86_64-unknown-linux-gnu/4.2.1
+        $ ln -s /usr/lib/x86_64-linux-gnu/crt1.o
+        $ ln -s /usr/lib/x86_64-linux-gnu/crto.o
+        $ ln -s /usr/lib/x86_64-linux-gnu/crti.o
+
+        but expecting new users to do this isn't very nice. So instead
+        we'll use the user's native compiler for host code (make menuconfig
+        code )
+    """
+
+    if cc.endswith('llvm-gcc'):
+        logging.warning('Not using llvm-gcc to build host code.')
+        return 'cc' # This probably user's native compiler
+    else:
+        # Other compilers are probably okay
+        return cc
 
 def handleNativeConfig(pargs, cc=None):
     logging.info('Configuring for native archive')
@@ -239,8 +266,13 @@ def handleNativeConfig(pargs, cc=None):
 
     # Test compiler
     #FIXME
+    if cc == None:
+        logging.error('Could not find a C compiler')
+        sys.exit(1)
+
     logging.info('Using CC...{}'.format(cc))
     subs['CC'] = cc
+    subs['HOSTCC'] = determineHostCompiler(cc)
 
     # Check tools are present
     tools = { 'LINKER':'ld',
@@ -336,6 +368,7 @@ def handleLLVMConfig(pargs, cc=None):
     # Add compiler to substitutions
     logging.info('Using LLVM Bitcode Compiler...{}'.format(cc))
     subs['CC'] = cc
+    subs['HOSTCC'] = determineHostCompiler(cc)
 
     logging.debug('Using template substitutions \n{} \nfor file "{}"'.format(
                   pprint.pformat(subs),
