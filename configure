@@ -283,6 +283,10 @@ def handleLLVMConfig(pargs, cc=None):
 
     logging.info('Using llvm-config at...{}'.format(llvmConfigTool))
 
+    if llvmConfigTool == None:
+        logging.error('llvm-config cannot be found')
+        sys.exit(1)
+
     # Detect tool directory
     (retCode, output) = runTool([llvmConfigTool, '--bindir'])
     if retCode != 0:
