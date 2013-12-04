@@ -274,6 +274,9 @@ def handleNativeConfig(pargs, cc=None):
     subs['CC'] = cc
     subs['HOSTCC'] = determineHostCompiler(cc)
 
+    if not checkForNCurses(subs['HOSTCC']):
+        sys.exit(1)
+
     # Check tools are present
     tools = { 'LINKER':'ld',
               'ARCHIVER':'ar',
@@ -369,6 +372,9 @@ def handleLLVMConfig(pargs, cc=None):
     logging.info('Using LLVM Bitcode Compiler...{}'.format(cc))
     subs['CC'] = cc
     subs['HOSTCC'] = determineHostCompiler(cc)
+
+    if not checkForNCurses(subs['HOSTCC']):
+        sys.exit(1)
 
     logging.debug('Using template substitutions \n{} \nfor file "{}"'.format(
                   pprint.pformat(subs),
@@ -538,6 +544,39 @@ def testBitCodeCompiler(cc, llvmToolDir):
     logging.info('Compiler {} works'.format(cc))
     return True
 
+def checkForNCurses(cc):
+    """
+        uClibc needs ncurses for make menuconfig
+        This function returns true if it is available.
+        Other wise it returns false.
+        
+        cc is the compiler to use
+    """
+    import tempfile
+
+    # Simple ncurses program
+    src="""
+#include <ncurses.h>
+
+int main()
+{
+    initscr();
+    return 0;
+}
+
+    """
+    logging.info('Checking for ncurses...')
+    with tempfile.NamedTemporaryFile(mode='w+', suffix='.c') as f:
+        f.write(src)
+        f.flush()
+        (returnCode, output) = runTool([cc, f.name, '-lncurses'])
+
+        if returnCode == 0:
+            return True
+
+        logging.error('Failed to find ncurses. Compiler said:\n{}'.format(output))
+        logging.error('You should install the ncurses library and development headers.')
+        return False
 
 if __name__ == '__main__':
     main(sys.argv[1:])
