@@ -164,11 +164,15 @@ def installPrebuiltConfig():
     else:
         logging.error('Your architecture is not supported. You will need to run `make menuconfig` manually')
 
+    logging.info('Looking for kernel include path...')
     path = findKernelIncludePath()
+    logging.info('Found "{}"'.format(path))
 
+    # Patch the .config file as necessary
     for line in fileinput.input(os.path.join(uclibcRoot, '.config'),inplace=True):
         if "KERNEL_HEADERS" in line:
             line = 'KERNEL_HEADERS="' + path + '"\n'
+            logging.debug('Patching KERNEL_HEADERS with path "{}"'.format(path))
         sys.stdout.write(line)
 
 
