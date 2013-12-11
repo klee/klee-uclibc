@@ -494,7 +494,7 @@ else
 	PTNAME :=
 	PTINC  :=
 endif
-CFLAGS += -I$(KERNEL_HEADERS)
+CFLAGS += -I$(KERNEL_HEADERS) -I/usr/include
 
 # Sigh, some stupid versions of gcc can't seem to cope with '-iwithprefix include'
 #CFLAGS+=-iwithprefix include
