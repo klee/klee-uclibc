@@ -181,19 +181,19 @@ def findKernelIncludePath():
         which are needed to build uclibc
     """
 
-    std_include = "/usr/include/"
+    std_include = "/usr/include"
     test_file = "asm/unistd.h"
 
     p = platform.machine()
 
     if p == 'x86_64':
-        if os.path.exists(std_include + "x86_64-linux-gnu/" + test_file):
-            return std_include + "x86_64-linux-gnu/"
+        if os.path.exists( os.path.join(std_include, "x86_64-linux-gnu", test_file) ):
+            return os.path.join(std_include, "x86_64-linux-gnu")
     if p == 'i686':
-        if os.path.exists(std_include + "i386-linux-gnu/" + test_file):
-            return std_include + "i386-linux-gnu/"
+        if os.path.exists( os.path.join(std_include, "i386-linux-gnu", test_file) ):
+            return os.path.join(std_include, "i386-linux-gnu")
 
-    if not os.path.exists(std_include + test_file):
+    if not os.path.exists( os.path.join(std_include, test_file) ):
         logging.error('Directory with kernel header files not found - using default. You will need to run `make menuconfig` manually')
     return std_include
 
