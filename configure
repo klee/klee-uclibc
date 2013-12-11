@@ -39,6 +39,7 @@ import subprocess
 import pprint
 import platform
 import shutil
+import fileinput
 
 uclibcRoot=os.path.dirname( os.path.abspath(__file__) )
 templateTarget= os.path.join( uclibcRoot, 'Makefile.klee')
@@ -163,6 +164,34 @@ def installPrebuiltConfig():
     else:
         logging.error('Your architecture is not supported. You will need to run `make menuconfig` manually')
 
+    path = findKernelIncludePath()
+
+    for line in fileinput.input(os.path.join(uclibcRoot, '.config'),inplace=True):
+        if "KERNEL_HEADERS" in line:
+            line = 'KERNEL_HEADERS="' + path + '"\n'
+        sys.stdout.write(line)
+
+
+def findKernelIncludePath():
+    """ This function searches for Kernel include files
+        which are needed to build uclibc
+    """
+
+    std_include = "/usr/include/"
+    test_file = "asm/unistd.h"
+
+    p = platform.machine()
+
+    if p == 'x86_64':
+        if os.path.exists(std_include + "x86_64-linux-gnu/" + test_file):
+            return std_include + "x86_64-linux-gnu/"
+    if p == 'i686':
+        if os.path.exists(std_include + "i386-linux-gnu/" + test_file):
+            return std_include + "i386-linux-gnu/"
+
+    if not os.path.exists(std_include + test_file):
+        logging.error('Directory with kernel header files not found - using default. You will need to run `make menuconfig` manually')
+    return std_include
 
 def getAbsPathForToolInPathEnv(tool):
     # Use which program to get the path
