@@ -136,7 +136,7 @@ check_ld=$(shell \
 	if $(LD) $(1) -o /dev/null -b binary /dev/null > /dev/null 2>&1; \
 	then echo "$(1)"; fi)
 
-ARFLAGS:=cr
+ARFLAGS?=cr
 
 OPTIMIZATION:=
 # Use '-Os' optimization if available, else use -O2, allow Config to override

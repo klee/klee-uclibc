@@ -22,3 +22,8 @@ DOASSERTS = @ASSERTS@
 
 HOSTCC     = @HOSTCC@
 BUILD_CFLAGS = -O2 -Wall @EMIT_LLVM@
+
+ifeq ($(notdir @CC@), clang)
+ AR = $(TOOLDIR)@LINKER@
+ ARFLAGS = -o
+endif
