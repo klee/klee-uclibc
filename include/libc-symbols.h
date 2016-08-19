@@ -562,6 +562,7 @@
 # define rtld_hidden_data_ver(local, name)
 #endif
 
+/* HACK: Don't use aliases
 #if defined NOT_IN_libc && defined IS_IN_libm
 # define libm_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
 # define libm_hidden_def(name) hidden_def (name)
@@ -570,7 +571,7 @@
 # define libm_hidden_data_def(name) hidden_data_def (name)
 # define libm_hidden_data_weak(name) hidden_data_weak (name)
 # define libm_hidden_data_ver(local, name) hidden_data_ver (local, name)
-#else
+#else */
 # define libm_hidden_proto(name, attrs...)
 # define libm_hidden_def(name)
 # define libm_hidden_weak(name)
@@ -578,7 +579,7 @@
 # define libm_hidden_data_def(name)
 # define libm_hidden_data_weak(name)
 # define libm_hidden_data_ver(local, name)
-#endif
+/* HACK: #endif */
 
 #if defined NOT_IN_libc && defined IS_IN_libresolv
 # define libresolv_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
