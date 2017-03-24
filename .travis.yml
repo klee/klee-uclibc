@@ -1,0 +1,78 @@
+sudo: required
+dist: trusty
+language: cpp
+compiler:
+    # FIXME: For now, building with Clang is disabled because the STP built with
+    # it hits an assertion failure during some tests. We should sort this out
+    # eventually and file the bug against STP or Clang whichever is appropriate,
+    # but for now it is easier to just reduce the number of configs we test
+    # anyway.
+    # - clang
+
+    - gcc
+env:
+    ###########################################################################
+    # Configurations
+    #
+    # Each line in the "env" section represents a set of environment variables
+    # passed to a build. Thus each line represents a different build
+    # configuration.
+    ###########################################################################
+
+    # Check a subset of the matrix of:
+    #   LLVM  : {2.9, 3.4}
+    #   SOLVERS : {Z3}
+    #   DISABLE_ASSERTIONS: {0}
+    #   ENABLE_OPTIMIZED: {1}
+    #   USE_CMAKE: {0, 1}
+
+    # Check KLEE CMake build in a few configurations
+    - LLVM_VERSION=3.4 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=1
+    - LLVM_VERSION=2.9 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=1
+
+    # Check KLEE Autoconf build in a few configurations
+    - LLVM_VERSION=3.4 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=0
+    - LLVM_VERSION=2.9 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=0
+
+addons:
+  apt:
+    sources:
+    - sourceline: 'ppa:ubuntu-toolchain-r/test'
+    - sourceline: 'ppa:h-rayflood/llvm'
+    - sourceline: 'deb http://download.opensuse.org/repositories/home:/delcypher:/z3/xUbuntu_14.04/ /'
+      key_url: 'http://download.opensuse.org/repositories/home:delcypher:z3/xUbuntu_14.04/Release.key'
+    packages:
+    - gcc-4.8
+    - g++-4.8
+    - libcap-dev
+    - libselinux1-dev
+    - cmake
+
+cache: apt
+before_install:
+    ###########################################################################
+    # Set up the locations to get various packages from
+    # We assume the Travis image uses Ubuntu 14.04 LTS
+    ###########################################################################
+    # Update package information
+    - sudo apt-get update
+    ###########################################################################
+    # Set up out of source build directory
+    ###########################################################################
+    - export SRC_DIR=`pwd`
+    - cd ../
+    - mkdir build
+    - cd build/
+    - export BUILD_DIR=`pwd`
+    ###########################################################################
+    # Install stuff
+    ###########################################################################
+    # Install LLVM and the LLVM bitcode compiler we require to build KLEE
+    - ${SRC_DIR}/.travis/install-llvm-and-runtime-compiler.sh
+    # Install lit (llvm-lit is not available)
+    - sudo pip install lit
+script:
+    # Build uclibc
+    - ${SRC_DIR}/.travis/uclibc.sh
+    # Test uclibc integration with KLEE
+    - ${SRC_DIR}/.travis/klee.sh
