@@ -155,6 +155,8 @@
 # define __GNUC_PREREQ(maj, min) 0
 #endif
 
+/* Whether to use feature set F.  */
+#define __GLIBC_USE(F) __GLIBC_USE_ ## F
 
 /* If _BSD_SOURCE was defined by the user, favor BSD over POSIX.  */
 #if defined _BSD_SOURCE && \
