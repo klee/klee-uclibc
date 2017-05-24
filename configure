@@ -354,6 +354,10 @@ def handleLLVMConfig(pargs, cc=None):
             logging.error('"{}" does not exist. Cannot use as llvm-config tool'.format(llvmConfigTool))
             sys.exit(1)
 
+    if not llvmConfigTool:
+	logging.error("llvm-config tool not found. Make sure it's in $PATH or provide path with --with-llvm-config")
+	sys.exit(1)
+
     logging.info('Using llvm-config at...{}'.format(llvmConfigTool))
 
     if llvmConfigTool == None:
