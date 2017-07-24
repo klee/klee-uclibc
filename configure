@@ -181,7 +181,7 @@ def findKernelIncludePath():
         which are needed to build uclibc
     """
 
-    std_include = "/usr/include"
+    std_include = os.environ.get("UCLIBC_KERNEL_HEADERS", "/usr/include")
     test_file = "asm/unistd.h"
 
     p = platform.machine()
@@ -193,8 +193,12 @@ def findKernelIncludePath():
         if os.path.exists( os.path.join(std_include, "i386-linux-gnu", test_file) ):
             return os.path.join(std_include, "i386-linux-gnu")
 
-    if not os.path.exists( os.path.join(std_include, test_file) ):
-        logging.error('Directory with kernel header files not found - using default. You will need to run `make menuconfig` manually')
+    test_path = os.path.join(std_include, test_file)
+    if not os.path.exists( test_path ):
+        msg = ("Kernel header files not found at '%s': '%s' is absent."
+               "Export the UCLIBC_KERNEL_HEADERS environment variable to change the"
+               "default path ('/usr/include')") 
+        logging.error(msg % (std_include, test_path))
     return std_include
 
 def getAbsPathForToolInPathEnv(tool):
