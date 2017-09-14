@@ -20,7 +20,7 @@ env:
     ###########################################################################
 
     # Check a subset of the matrix of:
-    #   LLVM  : {2.9, 3.4}
+    #   LLVM  : {3.4}
     #   SOLVERS : {Z3}
     #   DISABLE_ASSERTIONS: {0}
     #   ENABLE_OPTIMIZED: {1}
@@ -28,11 +28,9 @@ env:
 
     # Check KLEE CMake build in a few configurations
     - LLVM_VERSION=3.4 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=1
-    - LLVM_VERSION=2.9 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=1
 
     # Check KLEE Autoconf build in a few configurations
     - LLVM_VERSION=3.4 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=0
-    - LLVM_VERSION=2.9 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=0
 
 addons:
   apt:
