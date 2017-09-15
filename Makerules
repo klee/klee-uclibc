@@ -101,7 +101,7 @@ cmd_compile.m = $(cmd_compile.c) -DL_$(patsubst %$(suffix $(notdir $@)),%,$(notd
 cmd_compile-m = $(CC) $^ -c -o $@ $(CFLAGS) $(ARCH_CFLAGS) $(CFLAGS-$(suffix $@)) $(CFLAGS-$(notdir $(@D))) $(CFLAGS-$(notdir $@))
 cmd_strip     = $(STRIPTOOL) $(STRIP_FLAGS) $^
 cmd_t_strip   = $(STRIPTOOL) $(STRIP_FLAGS) $@
-cmd_ar        = $(AR) $(ARFLAGS) $@ $^
+cmd_ar        = $(AR) $(ARFLAGS) $@ $(sort $^)
 
 compile.c = @$(disp_compile.c) ; $(cmd_compile.c)
 compile.i = $(cmd_compile.c:-c=-E -dD)
