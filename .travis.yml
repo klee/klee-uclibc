@@ -24,13 +24,9 @@ env:
     #   SOLVERS : {Z3}
     #   DISABLE_ASSERTIONS: {0}
     #   ENABLE_OPTIMIZED: {1}
-    #   USE_CMAKE: {0, 1}
 
-    # Check KLEE CMake build in a few configurations
-    - LLVM_VERSION=3.4 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=1
-
-    # Check KLEE Autoconf build in a few configurations
-    - LLVM_VERSION=3.4 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1 USE_CMAKE=0
+    # Check KLEE CMake build
+    - LLVM_VERSION=3.4 SOLVERS=Z3 DISABLE_ASSERTIONS=0 ENABLE_OPTIMIZED=1
 
 addons:
   apt:
