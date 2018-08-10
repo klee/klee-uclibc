@@ -121,6 +121,7 @@
     the definitions from gcc's header.  */
 #if defined __GNUC__ && !defined _GCC_LIMITS_H_
 /* `_GCC_LIMITS_H_' is what GCC's file defines.  */
+#define __GLIBC_USE(F) __GLIBC_USE_ ## F
 # include_next <limits.h>
 
 /* The <limits.h> files in some gcc versions don't define LLONG_MIN,
