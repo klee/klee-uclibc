@@ -1313,7 +1313,7 @@ __locale_t newlocale(int category_mask, const char *locale, __locale_t base)
 	}
 #else
 	if (!base) {
-		if ((base = malloc(sizeof(__uclibc_locale_t))) == NULL) {
+		if ((base = calloc(1, sizeof(__uclibc_locale_t))) == NULL) {
 			return base;
 		}
 		_locale_init_l(base);
