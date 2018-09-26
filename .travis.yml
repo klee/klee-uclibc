@@ -64,7 +64,7 @@ before_install:
     # Install LLVM and the LLVM bitcode compiler we require to build KLEE
     - ${SRC_DIR}/.travis/install-llvm-and-runtime-compiler.sh
     # Install lit (llvm-lit is not available)
-    - sudo pip install lit
+    - sudo pip install lit==0.6.0
 script:
     # Build uclibc
     - ${SRC_DIR}/.travis/uclibc.sh
