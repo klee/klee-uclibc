@@ -318,7 +318,9 @@ int vsscanf(__const char *sp, __const char *fmt, va_list ap)
 	f.f.__user_locking = 1;		/* Set user locking. */
 	__stdio_init_mutex(&f.f.__lock);
 #endif
+#ifdef __STDIO_HAS_OPENLIST
 	f.f.__nextopen = NULL;
+#endif
 
 	return vfscanf(&f.f, fmt, ap);
 }

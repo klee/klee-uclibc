@@ -52,7 +52,9 @@ int vdprintf(int filedes, const char * __restrict format, va_list arg)
 	f.__user_locking = 1;		/* Set user locking. */
 	__stdio_init_mutex(&f.__lock);
 #endif
+#ifdef __STDIO_HAS_OPENLIST
 	f.__nextopen = NULL;
+#endif
 
 	rv = vfprintf(&f, format, arg);
 
