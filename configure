@@ -155,10 +155,10 @@ def installPrebuiltConfig():
         sys.exit(1)
 
 
-    if p == 'x86_64':
+    if p == 'x86_64' and platform.architecture()[0] == '64bit':
         logging.info('Installing .config file')
         shutil.copy(configFile, os.path.join(uclibcRoot, '.config'))
-    elif p == 'i686':
+    elif p == 'i686' and platform.architecture()[0] == '32bit':
         logging.info('Installing .config file')
         shutil.copy(configFile, os.path.join(uclibcRoot, '.config'))
     else:
