@@ -405,13 +405,14 @@ def handleLLVMConfig(pargs, cc=None):
         if not cc:
             logging.error('Failed to find a working LLVM bitcode compiler')
             sys.exit(1)
+        logging.info('Using LLVM Bitcode Compiler...{}'.format(cc))
     else:
+        logging.info('Using LLVM Bitcode Compiler specified by CC ...{}'.format(cc))
         if not testBitCodeCompiler(cc, llvmToolDir):
             logging.error('LLVM Bitcode compiler does not work')
             sys.exit(1)
 
     # Add compiler to substitutions
-    logging.info('Using LLVM Bitcode Compiler...{}'.format(cc))
     subs['CC'] = cc
     subs['HOSTCC'] = determineHostCompiler(cc)
 
