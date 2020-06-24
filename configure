@@ -103,7 +103,7 @@ def main(args):
         else:
             # Search for tool in PATH
             ccAbs = getAbsPathForToolInPathEnv(cc) 
-            if ccAbs == None:
+            if ccAbs is None:
                 logging.error('"{0}" is not in your path.'.format(cc))
                 sys.exit(1)
             else:
@@ -208,8 +208,8 @@ def getAbsPathForToolInPathEnv(tool):
     if r[0] == 0:
         # decode needed for Python 3.x as we get bytes not str
         return r[1].replace('\n','').lstrip().rstrip()
-    else:
-        return None
+
+    return None
 
     
 
@@ -272,9 +272,9 @@ def determineHostCompiler(cc):
     if cc.endswith('llvm-gcc'):
         logging.warning('Not using llvm-gcc to build host code.')
         return 'cc' # This probably user's native compiler
-    else:
-        # Other compilers are probably okay
-        return cc
+
+    # Other compilers are probably okay
+    return cc
 
 def handleNativeConfig(pargs, cc=None):
     logging.info('Configuring for native archive')
@@ -293,11 +293,11 @@ def handleNativeConfig(pargs, cc=None):
             if ccNew:
                 logging.info('Found...{}'.format(ccNew))
             else:
-                logging.info('Could not find {}'.format(lookForNew))
+                logging.info('Could not find {}'.format(lookFor))
 
             return ccNew
-        else:
-            return cc
+
+        return cc
 
 
     # Detect compiler if not forced
@@ -308,7 +308,7 @@ def handleNativeConfig(pargs, cc=None):
 
     # Test compiler
     #FIXME
-    if cc == None:
+    if cc is None:
         logging.error('Could not find a C compiler')
         sys.exit(1)
 
@@ -360,7 +360,7 @@ def handleLLVMConfig(pargs, cc=None):
 
     logging.info('Using llvm-config at...{}'.format(llvmConfigTool))
 
-    if llvmConfigTool == None:
+    if llvmConfigTool is None:
         logging.error('llvm-config cannot be found')
         sys.exit(1)
 
@@ -427,7 +427,6 @@ def handleLLVMConfig(pargs, cc=None):
     doTemplate(subs, templateFile, templateTarget)
 
 def doTemplate(subs, src, dest):
-    import re
     """
         Do a Template substitution using @KEY@ syntax.
 
@@ -522,7 +521,6 @@ def testBitCodeCompiler(cc, llvmToolDir):
         if bitCodeFileName and os.path.exists(bitCodeFileName): os.remove(bitCodeFileName)
         if cProgramFileName and os.path.exists(cProgramFileName): os.remove(cProgramFileName)
         if llvmAsFileName and os.path.exists(llvmAsFileName): os.remove(llvmAsFileName)
-        pass
 
     try:
         with tempfile.NamedTemporaryFile(suffix='.bc', delete=False) as f:
@@ -579,7 +577,7 @@ def testBitCodeCompiler(cc, llvmToolDir):
             cleanUp()
             return False
 
-    except Exception as e:
+    except Exception:
         cleanUp()
         raise
     
@@ -622,6 +620,7 @@ int main()
         logging.error('Failed to find ncurses. Compiler said:\n{}'.format(output))
         logging.error('You should install the ncurses library and development headers.')
         return False
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
