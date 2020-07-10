@@ -7,10 +7,5 @@ SVN_BRANCH="release_$( echo ${LLVM_VERSION} | sed 's/\.//g')"
 ###############################################################################
 # Select the compiler to use to generate LLVM bitcode
 ###############################################################################
-if [ "${LLVM_VERSION}" != "2.9" ]; then
-    KLEE_CC=/usr/bin/clang-${LLVM_VERSION}
-    KLEE_CXX=/usr/bin/clang++-${LLVM_VERSION}
-else
-    echo "Unknown LLVM version ${LLVM_VERSION}"
-    exit 1
-fi
+KLEE_CC=/usr/bin/clang-${LLVM_VERSION}
+KLEE_CXX=/usr/bin/clang++-${LLVM_VERSION}

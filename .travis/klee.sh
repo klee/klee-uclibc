@@ -1,14 +1,8 @@
 #!/bin/bash -x
 # Make sure we exit if there is a failure
 set -e
-: ${SOLVERS?"Solvers must be specified"}
 
 source ${SRC_DIR}/.travis/llvm_compiler.sh
-
-###############################################################################
-# Clone KLEE source code
-###############################################################################
-git clone https://github.com/klee/klee.git ${SRC_DIR}/klee
 
 ###############################################################################
 # Testing utils for KLEE
@@ -18,30 +12,23 @@ source ${SRC_DIR}/.travis/testing-utils.sh
 cd ${BUILD_DIR}
 
 ###############################################################################
-# Setting up solvers for KLEE
+# Build STP
 ###############################################################################
-source ${SRC_DIR}/.travis/solvers.sh
 
-KLEE_Z3_CONFIGURE_OPTION=""
-SOLVER_LIST=$(echo "${SOLVERS}" | sed 's/:/ /')
-
-# Set CMake configure options
-for solver in ${SOLVER_LIST}; do
-  echo "Setting CMake configuration option for ${solver}"
-  case ${solver} in
-  Z3)
-    echo "Z3"
-    KLEE_Z3_CONFIGURE_OPTION="-DENABLE_SOLVER_Z3=TRUE"
-    ;;
-  *)
-    echo "Unknown solver ${solver}"
-    exit 1
-  esac
-done
+git clone https://github.com/stp/stp.git
+cd stp
+git checkout tags/2.3.3
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
 
 ###############################################################################
-# Compile KLEE and run tests
+# Build KLEE and run tests
 ###############################################################################
+git clone https://github.com/klee/klee.git ${SRC_DIR}/klee
+
 mkdir klee-build
 cd klee-build
 
@@ -66,7 +53,7 @@ cmake \
   -DLLVMCC="${KLEE_CC}" \
   -DLLVMCXX="${KLEE_CXX}" \
   -DENABLE_TCMALLOC=OFF \
-  ${KLEE_Z3_CONFIGURE_OPTION} \
+  -DENABLE_SOLVER_STP=ON \
   ${KLEE_UCLIBC_CONFIGURE_OPTION} \
   -DGTEST_SRC_DIR=${GTEST_SRC_DIR} \
   -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
@@ -85,4 +72,5 @@ make unittests
 ###############################################################################
 # lit tests
 ###############################################################################
+pip install tabulate
 make systemtests
