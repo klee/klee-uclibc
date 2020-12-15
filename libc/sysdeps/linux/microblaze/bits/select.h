@@ -15,7 +15,8 @@
 # error "Never use <bits/select.h> directly; include <sys/select.h> instead."
 #endif
 
-#ifdef __GNUC__
+#if 0
+//#ifdef __GNUC__
 
 /* We don't use `memset' because this would require a prototype and
    the array isn't too big.  */
