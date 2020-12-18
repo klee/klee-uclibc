@@ -1,0 +1,68 @@
+name: CI
+
+on: [pull_request, push]
+
+# Defaults for building KLEE
+env:
+  COVERAGE: 0
+  DISABLE_ASSERTIONS: 1
+  ENABLE_DOXYGEN: 0
+  ENABLE_OPTIMIZED: 1
+  ENABLE_DEBUG: 0
+  GTEST_VERSION: 1.7.0
+  KLEE_RUNTIME_BUILD: "Debug+Asserts"
+  LLVM_VERSION: 9
+  MINISAT_VERSION: "master"
+  REQUIRES_RTTI: 1
+  SANITIZER_BUILD:
+  SOLVERS: STP
+  STP_VERSION: 2.3.3
+  USE_TCMALLOC: 0
+  USE_LIBCXX: 0
+  Z3_VERSION: 4.8.4
+  BASE: /home/runner/work/klee-uclibc/klee-uclibc/ # Github Actions Specifi
+
+jobs:
+  Linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        name: [
+                "Latest klee-uclibc",
+            ]
+        include:
+          # Check we can build latest klee-uclibc branch
+          - name: "Latest klee-uclibc"
+            env:
+              UCLIBC_VERSION: ""
+    steps:
+      - name: Checkout KLEE UClibc source code
+        uses: actions/checkout@v2
+        with:
+          path: klee-uclibc-90
+
+      - name: Checkout KLEE source code
+        uses: actions/checkout@v2
+        with:
+          repository: klee/klee
+          path: klee
+
+      - name: Use sudo invocation
+        env: ${{ matrix.env }}
+        run: cd $GITHUB_WORKSPACE/klee/scripts/build && sed -i 's/ apt / sudo apt /g' *.inc
+
+      - name: Build UClibc
+        env: ${{ matrix.env }}
+        run: $GITHUB_WORKSPACE/klee/scripts/build/build.sh uclibc --install-system-deps --debug
+
+      - name: Install lit
+        env: ${{ matrix.env }}
+        run: sudo pip3 install lit
+
+      - name: Build KLEE
+        env: ${{ matrix.env }}
+        run: $GITHUB_WORKSPACE/klee/scripts/build/build.sh klee --install-system-deps --debug
+
+      - name: Run tests
+        env: ${{ matrix.env }}
+        run: cd $GITHUB_WORKSPACE/klee_build90stp && make check

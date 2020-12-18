@@ -1,9 +1,9 @@
 KLEE-uClibc
 ===========
 
-[![Build Status](https://api.travis-ci.org/klee/klee-uclibc.svg?branch=klee_0_9_29)](https://travis-ci.org/klee/klee-uclibc)
+[![Build Status](https://github.com/klee/klee-uclibc/workflows/CI/badge.svg)](https://github.com/klee/klee-uclibc/actions)
 
-This is a modified version version of uClibc for KLEE.  Please see README for information about uClibc. 
+This is a modified version version of uClibc for KLEE.  Please see README for information about uClibc.
 
 To build uClibc for KLEE:
 
@@ -23,7 +23,7 @@ To build uClibc for KLEE:
   environment variable or by using `--with-cc` with the configure
   script.
 
-3. Run the configure script. 
+3. Run the configure script.
 
    ```$ ./configure --make-llvm-lib```
 
