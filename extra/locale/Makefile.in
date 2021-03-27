@@ -6,7 +6,20 @@
 #
 
 # command used to download source code
-WGET := wget --passive-ftp
+GET  :=
+WGET := $(shell command -v wget 2> /dev/null)
+CURL := $(shell command -v curl 2> /dev/null)
+
+ifneq (, $(WGET))
+GET += $(WGET) --passive-ftp
+else
+ifneq (, $(CURL))
+GET += $(CURL) -OL
+else
+$(error "curl/wget not found")
+endif
+endif
+
 
 LOCALE_DATA_FILENAME := uClibc-locale-030818.tgz
 
@@ -141,7 +154,7 @@ $(locale_OUT)/locale_collate.h: $(locale_OUT)/gen_collate $(locale_OUT)/locale_t
 
 $(locale_OUT)/$(LOCALE_DATA_FILENAME):
 ifeq ($(UCLIBC_DOWNLOAD_PREGENERATED_LOCALE_DATA),y)
-	( cd $(dir $@); $(WGET) http://www.uclibc.org/downloads/$(notdir $@) )
+	( cd $(dir $@); $(GET) https://www.uclibc.org/downloads/$(notdir $@) )
 endif
 
 ifeq ($(UCLIBC_PREGENERATED_LOCALE_DATA),y)
