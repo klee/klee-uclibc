@@ -21,7 +21,7 @@
 #endif
 
 
-#if defined __GNUC__ && __GNUC__ >= 2
+#if 0 && defined __GNUC__ && __GNUC__ >= 2
 
 # define __FD_ZERO(fdsp) \
   do {									      \
