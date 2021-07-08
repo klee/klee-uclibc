@@ -14,8 +14,13 @@ libc_hidden_proto(memmove)
 # define Wmemmove memmove
 #endif
 
+char __klee_handle_memmove(void *, const void *, size_t);
+
 Wvoid *Wmemmove(Wvoid *s1, const Wvoid *s2, size_t n)
 {
+	if(__klee_handle_memmove(s1, s2, n))
+		return s1;
+
 #ifdef __BCC__
 	register Wchar *s = (Wchar *) s1;
 	register const Wchar *p = (const Wchar *) s2;

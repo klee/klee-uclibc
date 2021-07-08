@@ -15,8 +15,14 @@
 
 libc_hidden_proto(Wmemcpy)
 
+char __klee_handle_memcpy(void *, const void *, size_t);
+
 Wvoid *Wmemcpy(Wvoid * __restrict s1, const Wvoid * __restrict s2, size_t n)
 {
+
+	if (__klee_handle_memcpy(s1, s2, n))
+		return s1;
+
 	register Wchar *r1 = s1;
 	register const Wchar *r2 = s2;
 

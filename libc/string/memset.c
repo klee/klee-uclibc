@@ -14,8 +14,13 @@ libc_hidden_proto(memset)
 # define Wmemset memset
 #endif
 
+char __klee_handle_memset(void *, int, size_t);
+
 Wvoid *Wmemset(Wvoid *s, Wint c, size_t n)
 {
+	if (__klee_handle_memset(s, c, n))
+		return s;
+
 	register Wuchar *p = (Wuchar *) s;
 #ifdef __BCC__
 	/* bcc can optimize the counter if it thinks it is a pointer... */
