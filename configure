@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Configure the build of klee-uclibc. It can be built
 as a native library or as an LLVM bitcode archive.
