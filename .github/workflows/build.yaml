@@ -9,9 +9,9 @@ env:
   ENABLE_DOXYGEN: 0
   ENABLE_OPTIMIZED: 1
   ENABLE_DEBUG: 0
-  GTEST_VERSION: 1.7.0
+  GTEST_VERSION: 1.11.0
   KLEE_RUNTIME_BUILD: "Debug+Asserts"
-  LLVM_VERSION: 9
+  LLVM_VERSION: 11
   MINISAT_VERSION: "master"
   REQUIRES_RTTI: 1
   SANITIZER_BUILD:
@@ -19,8 +19,8 @@ env:
   STP_VERSION: 2.3.3
   USE_TCMALLOC: 0
   USE_LIBCXX: 0
-  Z3_VERSION: 4.8.4
-  BASE: /home/runner/work/klee-uclibc/klee-uclibc/ # Github Actions Specifi
+  Z3_VERSION: 4.8.14
+  BASE: /home/runner/work/klee-uclibc/klee-uclibc/
 
 jobs:
   Linux:
@@ -47,17 +47,9 @@ jobs:
           repository: klee/klee
           path: klee
 
-      - name: Use sudo invocation
-        env: ${{ matrix.env }}
-        run: cd $GITHUB_WORKSPACE/klee/scripts/build && sed -i 's/ apt / sudo apt /g' *.inc
-
       - name: Build UClibc
         env: ${{ matrix.env }}
         run: $GITHUB_WORKSPACE/klee/scripts/build/build.sh uclibc --install-system-deps --debug
-
-      - name: Install lit
-        env: ${{ matrix.env }}
-        run: sudo pip3 install lit
 
       - name: Build KLEE
         env: ${{ matrix.env }}
@@ -65,4 +57,4 @@ jobs:
 
       - name: Run tests
         env: ${{ matrix.env }}
-        run: cd $GITHUB_WORKSPACE/klee_build90stp && make check
+        run: cd $GITHUB_WORKSPACE/klee_build110stp && make check
