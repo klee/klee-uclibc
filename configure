@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Configure the build of klee-uclibc. It can be built
 as a native library or as an LLVM bitcode archive.
@@ -7,13 +7,13 @@ Information about configuration is written to console and
 more verbose information is writen to a log file (usually
 config.log)
 
-You can use the CC environment variable (or flag --with-cc) 
+You can use the CC environment variable (or flag --with-cc)
 to force a particular C compiler. e.g.
 
 $ CC=/usr/bin/clang ./configure
 
 If the forced compiler is a tool name (e.g. CC=clang) then
-the PATH is searched. Otherwise it is assumed to be a 
+the PATH is searched. Otherwise it is assumed to be a
 relative or absolute path.
 
 If building an LLVM bitcode archive and CC is not set
@@ -26,20 +26,15 @@ in your path in the following order
 
 """
 
-import sys
-try:
-    import argparse
-except ImportError:
-    print("Failed to import argparse. Your python version is probably too old")
-    sys.exit(1)
-
-import os
-import logging
-import subprocess
-import pprint
-import platform
-import shutil
+import argparse
 import fileinput
+import logging
+import os
+import platform
+import pprint
+import shutil
+import subprocess
+import sys
 
 uclibcRoot=os.path.dirname( os.path.abspath(__file__) )
 templateTarget= os.path.join( uclibcRoot, 'Makefile.klee')
@@ -102,7 +97,7 @@ def main(args):
             cc = os.path.abspath(cc)
         else:
             # Search for tool in PATH
-            ccAbs = getAbsPathForToolInPathEnv(cc) 
+            ccAbs = shutil.which(cc)
             if ccAbs is None:
                 logging.error('"{0}" is not in your path.'.format(cc))
                 sys.exit(1)
@@ -133,12 +128,11 @@ def main(args):
             os.remove(uclibcConfigFile)
         installPrebuiltConfig()
 
-
 def installPrebuiltConfig():
     """ This function installs pre-made .config files
         and any necessary patches for a particular architecture.
 
-        FIXME: Remove this for upstream klee-uclibc. People should 
+        FIXME: Remove this for upstream klee-uclibc. People should
                just run `make menuconfig` themselves. It's not hard!
     """
     p = platform.machine()
@@ -175,7 +169,6 @@ def installPrebuiltConfig():
             logging.debug('Patching KERNEL_HEADERS with path "{}"'.format(path))
         sys.stdout.write(line)
 
-
 def findKernelIncludePath():
     """ This function searches for Kernel include files
         which are needed to build uclibc
@@ -197,21 +190,9 @@ def findKernelIncludePath():
     if not os.path.exists( test_path ):
         msg = ("Kernel header files not found at '%s': '%s' is absent."
                "Export the UCLIBC_KERNEL_HEADERS environment variable to change the"
-               "default path ('/usr/include')") 
+               "default path ('/usr/include')")
         logging.error(msg % (std_include, test_path))
     return std_include
-
-def getAbsPathForToolInPathEnv(tool):
-    # Use which program to get the path
-    r = runTool(['which', tool])
-
-    if r[0] == 0:
-        # decode needed for Python 3.x as we get bytes not str
-        return r[1].replace('\n','').lstrip().rstrip()
-
-    return None
-
-    
 
 def runTool(cmd):
     """
@@ -281,14 +262,14 @@ def handleNativeConfig(pargs, cc=None):
 
     subs = { 'EMIT_LLVM':'', # Building natively so we don't want LLVM Bitcode
              'TOOLDIR':'' # Native compiler tools should be in PATH
-           } 
+           }
     handleCommonOptions(pargs, subs)
 
 
     def searchPath(cc, lookFor):
         if not cc:
             logging.info('Looking for...{}'.format(lookFor))
-            ccNew = getAbsPathForToolInPathEnv(lookFor)
+            ccNew = shutil.which(lookFor)
 
             if ccNew:
                 logging.info('Found...{}'.format(ccNew))
@@ -326,7 +307,7 @@ def handleNativeConfig(pargs, cc=None):
               'OBJDUMP':'objdump'
             }
     for (name, executable) in tools.items():
-        if not getAbsPathForToolInPathEnv(executable):
+        if not shutil.which(executable):
             logging.error('Could not find {} in PATH'.format(executable))
             sys.exit(1)
 
@@ -340,8 +321,6 @@ def handleNativeConfig(pargs, cc=None):
 
     doTemplate(subs, templateFile, templateTarget)
 
-    
-
 def handleLLVMConfig(pargs, cc=None):
     # Substitutions
     subs = { 'EMIT_LLVM':'-emit-llvm'}
@@ -351,12 +330,15 @@ def handleLLVMConfig(pargs, cc=None):
 
     llvmConfigTool = pargs.with_llvm_config
     if not llvmConfigTool:
-        llvmConfigTool = getAbsPathForToolInPathEnv('llvm-config')
+        llvmConfigTool = shutil.which('llvm-config')
     else:
-        llvmConfigTool = os.path.abspath(llvmConfigTool)
-        if not os.path.exists(llvmConfigTool):
-            logging.error('"{}" does not exist. Cannot use as llvm-config tool'.format(llvmConfigTool))
-            sys.exit(1)
+        if os.sep not in llvmConfigTool:
+            llvmConfigTool = shutil.which(llvmConfigTool)
+        else:
+            llvmConfigTool = os.path.abspath(llvmConfigTool)
+            if not os.path.exists(llvmConfigTool):
+                logging.error('"{}" does not exist. Cannot use as llvm-config tool'.format(llvmConfigTool))
+                sys.exit(1)
 
     logging.info('Using llvm-config at...{}'.format(llvmConfigTool))
 
@@ -451,13 +433,11 @@ def doTemplate(subs, src, dest):
         # Do replacements
         for (oldString, replacement) in subs.items():
             srcString = srcString.replace('@' + oldString + '@', replacement)
-            
+
     # Write templated string to file
     logging.info('Writing templated file to "{}"'.format(dest))
     with open(dest,'w') as f:
         f.write(srcString)
-
-
 
 def findBitCodeCompiler(llvmToolDir):
     """
@@ -477,25 +457,24 @@ def findBitCodeCompiler(llvmToolDir):
             ccPath=None
     else:
         ccPath=None
-    
+
     # If that failed try llvm-gcc in PATH
     if not ccPath:
-        llvmgcc = getAbsPathForToolInPathEnv('llvm-gcc')
+        llvmgcc = shutil.which('llvm-gcc')
         if llvmgcc:
             logging.info('Found llvm-gcc in PATH...{}'.format(llvmgcc))
             if testBitCodeCompiler(llvmgcc, llvmToolDir):
                 ccPath = llvmgcc
-                
+
     # If that failed try clang in PATH
     if not ccPath:
-        clang = getAbsPathForToolInPathEnv('clang')
+        clang = shutil.which('clang')
         if clang:
             logging.info('Found clang in PATH...{}'.format(llvmgcc))
             if testBitCodeCompiler(clang, llvmToolDir):
                 ccPath = clang
 
     return ccPath
-        
 
 def testBitCodeCompiler(cc, llvmToolDir):
     """
@@ -540,11 +519,11 @@ def testBitCodeCompiler(cc, llvmToolDir):
             logging.error(msg)
             raise Exception(msg)
 
-        (retCode, ccOutput) = runTool([cc, 
+        (retCode, ccOutput) = runTool([cc,
                                        '-c',
-                                       '-g', 
-                                       '-emit-llvm', 
-                                       cProgramFileName, 
+                                       '-g',
+                                       '-emit-llvm',
+                                       cProgramFileName,
                                        '-o', bitCodeFileName]
                                       )
 
@@ -580,7 +559,7 @@ def testBitCodeCompiler(cc, llvmToolDir):
     except Exception:
         cleanUp()
         raise
-    
+
     cleanUp()
     logging.info('Compiler {} works'.format(cc))
     return True
@@ -590,7 +569,7 @@ def checkForNCurses(cc):
         uClibc needs ncurses for make menuconfig
         This function returns true if it is available.
         Other wise it returns false.
-        
+
         cc is the compiler to use
     """
     import tempfile
