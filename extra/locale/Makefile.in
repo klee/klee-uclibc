@@ -6,6 +6,7 @@
 #
 
 # command used to download source code
+ifeq ($(UCLIBC_DOWNLOAD_PREGENERATED_LOCALE_DATA),y)
 GET  :=
 WGET := $(shell command -v wget 2> /dev/null)
 CURL := $(shell command -v curl 2> /dev/null)
@@ -17,6 +18,7 @@ ifneq (, $(CURL))
 GET += $(CURL) -OL
 else
 $(error "curl/wget not found")
+endif
 endif
 endif
 
