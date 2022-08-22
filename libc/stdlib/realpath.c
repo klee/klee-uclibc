@@ -54,7 +54,7 @@ char got_path[];
 	/* use user supplied buffer directly - reduces stack usage */
 	/* char got_path[PATH_MAX]; */
 	char *max_path;
-	char *new_path;
+	char *new_path, *allocated_path;
 	size_t path_len;
 	int readlinks = 0;
 #ifdef S_IFLNK
@@ -78,12 +78,13 @@ char got_path[];
 	/* Copy so that path is at the end of copy_path[] */
 	strcpy(copy_path + (PATH_MAX-1) - path_len, path);
 	path = copy_path + (PATH_MAX-1) - path_len;
+	allocated_path = got_path ? NULL : (got_path = malloc(PATH_MAX));
 	max_path = got_path + PATH_MAX - 2; /* points to last non-NUL char */
 	new_path = got_path;
 	if (*path != '/') {
 		/* If it's a relative pathname use getcwd for starters. */
 		if (!getcwd(new_path, PATH_MAX - 1))
-			return NULL;
+			goto err;
 		new_path += strlen(new_path);
 		if (new_path[-1] != '/')
 			*new_path++ = '/';
@@ -120,6 +121,8 @@ char got_path[];
 		while (*path != '\0' && *path != '/') {
 			if (new_path > max_path) {
 				__set_errno(ENAMETOOLONG);
+err:
+				free(allocated_path);
 				return NULL;
 			}
 			*new_path++ = *path++;
@@ -128,22 +131,23 @@ char got_path[];
 		/* Protect against infinite loops. */
 		if (readlinks++ > MAX_READLINKS) {
 			__set_errno(ELOOP);
-			return NULL;
+			goto err;
 		}
 		path_len = strlen(path);
 		/* See if last (so far) pathname component is a symlink. */
 		*new_path = '\0';
+  		int sv_errno = errno;
 		link_len = readlink(got_path, copy_path, PATH_MAX - 1);
 		if (link_len < 0) {
 			/* EINVAL means the file exists but isn't a symlink. */
 			if (errno != EINVAL) {
-				return NULL;
+			  goto err;
 			}
 		} else {
 			/* Safe sex check. */
 			if (path_len + link_len >= PATH_MAX - 2) {
 				__set_errno(ENAMETOOLONG);
-				return NULL;
+ 				goto err;
 			}
 			/* Note: readlink doesn't add the null byte. */
 			/* copy_path[link_len] = '\0'; - we don't need it too */
@@ -157,6 +161,7 @@ char got_path[];
 			memmove(copy_path + (PATH_MAX-1) - link_len - path_len, copy_path, link_len);
 			path = copy_path + (PATH_MAX-1) - link_len - path_len;
 		}
+		__set_errno(sv_errno);
 #endif							/* S_IFLNK */
 		*new_path++ = '/';
 	}

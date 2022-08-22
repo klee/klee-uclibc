@@ -20,6 +20,17 @@ libc_hidden_proto(strlen)
 #endif
 libc_hidden_proto(memcpy)
 
+char *__strdup(const char* s1) {
+	register char *s;
+	register size_t l = (strlen(s1) + 1) * sizeof(char);
+
+	if ((s = malloc(l)) != NULL) {
+		memcpy(s, s1, l);
+	}
+
+	return s;
+}
+
 Wchar *Wstrdup(register const Wchar *s1)
 {
 	register Wchar *s;
