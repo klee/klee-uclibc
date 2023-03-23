@@ -20,6 +20,7 @@ env:
   USE_TCMALLOC: 0
   USE_LIBCXX: 0
   Z3_VERSION: 4.8.14
+  SQLITE_VERSION: 3400100
   BASE: /home/runner/work/klee-uclibc/klee-uclibc/
 
 jobs:
