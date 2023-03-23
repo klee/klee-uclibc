@@ -8,7 +8,7 @@
 
 TOOLDIR = @TOOLDIR@
 
-CC         = @CC@ @EMIT_LLVM@ $(KLEE_CFLAGS)
+CC         = @CC@ -Wno-error=int-conversion @EMIT_LLVM@ $(KLEE_CFLAGS)
 AR         = $(TOOLDIR)@ARCHIVER@
 LD         = $(TOOLDIR)@LINKER@
 NM         = $(TOOLDIR)@NM@
