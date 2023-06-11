@@ -78,6 +78,8 @@ char got_path[];
 	/* Copy so that path is at the end of copy_path[] */
 	strcpy(copy_path + (PATH_MAX-1) - path_len, path);
 	path = copy_path + (PATH_MAX-1) - path_len;
+	if (!got_path)
+		got_path = malloc(PATH_MAX);
 	max_path = got_path + PATH_MAX - 2; /* points to last non-NUL char */
 	new_path = got_path;
 	if (*path != '/') {
